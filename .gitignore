@@ -1,0 +1,14 @@
+dist
+build
+__pycache__
+*.egg-info
+m2aia-*
+.venv*
+.pytest_cache
+.vscode
+venv*
+*.zip
+*.mis
+*.jpg
+*.txt
+*.h5
