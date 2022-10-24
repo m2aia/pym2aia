@@ -1,7 +1,7 @@
 from .ImageIO import *
 from .Generators import *
 from .Dataset import *
-from .Docker import *
+# from .Docker import *
 
 # dry-load M2aia binary libraries
 from .Library import load_m2aia_library
