@@ -135,7 +135,7 @@ class ImzMLReader(object):
         self.lib.GetIntensities.restype = None
 
         self.x_axis = None
-
+        
         self.imzML_path = imzML_path
         self.handle = None
         self.spectrum_type_id = None
@@ -169,9 +169,9 @@ class ImzMLReader(object):
         parameters = self.GetParametersAsFormattedString()
         cParamPath = create_string_buffer(parameters.encode())
         self.handle = self.lib.CreateImageHandle(cPath, cParamPath)
-        test_axis = self.GetXAxis()
+    
         self.number_of_spectra = self.GetNumberOfSpectra()
-
+        self.shape = self.GetShape()
 
         self.depth = self.lib.GetXAxisDepth(self.handle)
         self.spectrum_type_id = self.lib.GetSpectrumType(self.handle)
@@ -241,6 +241,7 @@ class ImzMLReader(object):
         self.lib.GetSize(self.handle, shape.ctypes.data_as(
             POINTER(c_uint32)))
         return shape
+
 
     def GetSpacing(self):
         self.CheckHandle()
@@ -387,7 +388,7 @@ class ImzMLReader(object):
 
     def GetNumberOfSpectra(self):
         self.CheckHandle()
-        return self.lib.GetNumberOfSpectra(self.handle)
+        return self.number_of_spectra
 
     def SpectrumIterator(self):
         self.CheckHandle()
