@@ -113,25 +113,25 @@ class ImzMLReader(object):
             HANDLE_PTR, POINTER(c_double)]
         self.lib.GetMaxSpectrum.restype = None
 
-        self.lib.GetYDataTypeSizeInBytes.argtype = [HANDLE_PTR]
+        self.lib.GetYDataTypeSizeInBytes.argtypes = [HANDLE_PTR]
         self.lib.GetYDataTypeSizeInBytes.restype = c_uint32
 
-        self.lib.GetNumberOfSpectra.argtype = [HANDLE_PTR]
+        self.lib.GetNumberOfSpectra.argtypes = [HANDLE_PTR]
         self.lib.GetNumberOfSpectra.restype = c_uint32
 
-        self.lib.GetMetaDataDictionary.argtype = [HANDLE_PTR]
+        self.lib.GetMetaDataDictionary.argtypes = [HANDLE_PTR]
         self.lib.GetMetaDataDictionary.restype = c_char_p
 
-        self.lib.DestroyCharBuffer.argtype = [HANDLE_PTR]
+        self.lib.DestroyCharBuffer.argtypes = [HANDLE_PTR]
         self.lib.DestroyCharBuffer.restype = None
 
-        self.lib.GetSpectrum.argtype = [HANDLE_PTR, c_uint32, POINTER(c_float), POINTER(c_float)]
+        self.lib.GetSpectrum.argtypes = [HANDLE_PTR, c_uint32, POINTER(c_float), POINTER(c_float)]
         self.lib.GetSpectrum.restype = None
 
-        self.lib.GetSpectra.argtype = [HANDLE_PTR, c_void_p, c_uint32, POINTER(c_float)]
+        self.lib.GetSpectra.argtypes = [HANDLE_PTR, c_void_p, c_uint32, POINTER(c_float)]
         self.lib.GetSpectra.restype = None
 
-        self.lib.GetIntensities.argtype = [HANDLE_PTR, c_void_p, c_uint32, POINTER(c_float)]
+        self.lib.GetIntensities.argtypes = [HANDLE_PTR, c_void_p, c_uint32, POINTER(c_float)]
         self.lib.GetIntensities.restype = None
 
         self.x_axis = None
@@ -169,6 +169,7 @@ class ImzMLReader(object):
         parameters = self.GetParametersAsFormattedString()
         cParamPath = create_string_buffer(parameters.encode())
         self.handle = self.lib.CreateImageHandle(cPath, cParamPath)
+        test_axis = self.GetXAxis()
         self.number_of_spectra = self.GetNumberOfSpectra()
 
 
