@@ -36,8 +36,7 @@ setuptools.setup(
         "Development Status :: 3 - Alpha"
     ],
     packages=find_packages(where='src'),
-    package_dir={"": "src"},
-    package_data={'m2aia': ['bin/*'] },
+    package_dir={"": "src"},    
     python_requires=">=3.8",
     install_requires=[
           'numpy',
