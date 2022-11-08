@@ -4,7 +4,7 @@ M²aia is an interactive desktop application for visualization and processing of
 
 ### Linux
 
-Check the [Dockerfile](docker/Dockerfile)
+Check the [Dockerfile](Dockerfile)
 
 ``` docker build . -t pym2aia-test && docker run --rm pym2aia-test pytest ```
 
