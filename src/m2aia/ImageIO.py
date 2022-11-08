@@ -170,7 +170,7 @@ class ImzMLReader(object):
         cParamPath = create_string_buffer(parameters.encode())
         self.handle = self.lib.CreateImageHandle(cPath, cParamPath)
     
-        self.number_of_spectra = self.GetNumberOfSpectra()
+        self.number_of_spectra = self.lib.GetNumberOfSpectra(self.handle)
         self.shape = self.GetShape()
 
         self.depth = self.lib.GetXAxisDepth(self.handle)

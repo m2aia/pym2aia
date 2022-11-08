@@ -6,6 +6,8 @@ import os
 
 def get_library_name():
     if "Linux" in platform.platform():
+        p = ctypes.util.find_library("libM2aiaCoreIO.so")
+        print(p)
         return "libM2aiaCoreIO.so"
     else:
         # M2aiaCoreIO is in InstallDir/bin/MitkCore/
