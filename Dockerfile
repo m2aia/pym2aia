@@ -27,3 +27,4 @@ RUN pip install -e /opt/pym2aia
 
 # run pytest
 WORKDIR /opt/pym2aia
+CMD [ "pytest" ]
