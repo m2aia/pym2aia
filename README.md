@@ -2,6 +2,8 @@ M²aia is an interactive desktop application for visualization and processing of
 
 ## Installation
 
+Download the latest version of [M²aia](https://m2aia.de/)
+
 ### Linux
 
 Check the [Dockerfile](Dockerfile)
@@ -9,8 +11,6 @@ Check the [Dockerfile](Dockerfile)
 ``` docker build . -t pym2aia-test && docker run --rm pym2aia-test pytest ```
 
 ### Windows
-
-Download the latest version of [M²aia (Windows)](https://m2aia.de/)
 
 It is required to promote a system variable pointing to:
 
