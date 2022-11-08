@@ -8,6 +8,8 @@ Download the latest version of [M²aia (Windows)](https://m2aia.de/)
 
 It is required to promote a system variable pointing to:
 
+For example:
+
 ``` C:\Users\User\Documents\M2aiaWorkbench 2022.10.00\bin\MitkCore ```
 
 
