@@ -39,6 +39,7 @@ setuptools.setup(
     package_dir={"": "src"},    
     python_requires=">=3.8",
     install_requires=[
+          'wheel',
           'numpy',
           'SimpleITK'
       ]
