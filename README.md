@@ -6,7 +6,7 @@ Download the latest version of [M²aia](https://m2aia.de/)
 
 ### Linux
 
-Check the [Dockerfile](Dockerfile)
+Check the [Dockerfile](Dockerfile) for installation hints.
 
 ``` docker build . -t pym2aia-test && docker run --rm pym2aia-test pytest ```
 
