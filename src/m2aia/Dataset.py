@@ -59,13 +59,13 @@ class SpectrumDataset(BaseDataSet):
             assert(self.spectrum_depth == handle.GetXAxisDepth())
             imageElements = []
             # get array returns a 2D image
-            index_image = handle.GetArray(handle.GetXAxis()[self.spectrum_depth//2], 10, squeeze=False).astype(np.int32)
+            index_image = handle.GetArray(handle.GetXAxis()[self.spectrum_depth//2], 1, squeeze=False).astype(np.int32)
             index_image.fill(-1)
 
             for spectrumID in range(handle.GetNumberOfSpectra()):
                 (x,y,z) = handle.GetSpectrumPosition(spectrumID)
                 imageElements.append((imageID, spectrumID, (x,y,z)))
-                index_image[y,x] = spectrumID
+                index_image[z,y,x] = spectrumID
 
             self.elements.extend(imageElements)
             self.index_images.append(index_image)
