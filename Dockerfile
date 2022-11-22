@@ -35,7 +35,7 @@ RUN wget https://data.jtfc.de/latest/ubuntu20_04/M2aia-latest.tar.gz -nv
 RUN mv M2aia-latest.tar.gz /opt/packages/m2aia.tar.gz 
 
 # we extract all files to this location
-RUN tar -xvf /opt/packages/m2aia.tar.gz
+RUN tar -xvf /opt/packages/m2aia.tar.gz -C /opt/m2aia --strip-components=1
 
 
 # promote the required library path
