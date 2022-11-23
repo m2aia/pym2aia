@@ -8,8 +8,6 @@ Download the latest version of [M²aia](https://m2aia.de/)
 
 Check the [Dockerfile](Dockerfile) for installation hints.
 
-``` docker build . -t pym2aia-test && docker run --rm pym2aia-test pytest ```
-
 ### Windows
 
 It is required to promote a system variable pointing to:
