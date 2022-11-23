@@ -7,7 +7,6 @@ import os
 def get_library_name():
     if "Linux" in platform.platform():
         p = ctypes.util.find_library("libM2aiaCoreIO.so")
-        print(p)
         return "libM2aiaCoreIO.so"
     else:
         # M2aiaCoreIO is in InstallDir/bin/MitkCore/
@@ -26,7 +25,7 @@ def load_m2aia_library():
         raise ImportError(
 """Could not find the required M2aia libraries.
 pyM2aia requires a valid M2aia installation/build. 
-Go to https://m2aia.de and download the latest version of M2aia. 
+Go to https://m2aia.github.io/m2aia and download the latest version of M2aia. 
 Then, follow the setup procedure for pyM2aia on https://github.com/m2aia/pym2aia.
 """
                         ,name="m2aia")

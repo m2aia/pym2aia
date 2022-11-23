@@ -189,7 +189,7 @@ class IonImageDataset(BaseDataSet):
         image_id = index//len(self.elements)
         if c not in self.buffer[image_id] or self.buffer_type == 'none':
             # create ion image
-            ii = self.images[image_id].GetArray(c, self.get_tolerance(c))
+            ii = self.images[image_id].GetArray(c, self.get_tolerance(c), squeeze=False)
             
             if self.buffer_type == 'memory': # buffer image in memory
                 self.buffer[image_id][c] = ii

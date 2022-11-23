@@ -270,7 +270,7 @@ class ImzMLReader(object):
             POINTER(c_double)))
         return origin
 
-    def GetArray(self, center, tol, dtype=np.float32, squeeze:bool=True):
+    def GetArray(self, center, tol, dtype=np.float32, squeeze:bool=False):
         self.CheckHandle()
         xs = self.GetXAxis()
 
