@@ -2,8 +2,6 @@ M²aia is an interactive desktop application for visualization and processing of
 
 # Installation
 
-
-
 ## Ubuntu/Linux
 Download the latest version of [M²aia](https://m2aia.de/).
 
@@ -17,15 +15,17 @@ sudo apt-get install -q -y --no-install-recommends \
   git \
   wget
 
+cd /home/$USER
 wget https://data.jtfc.de/latest/ubuntu20_04/M2aia-latest.tar.gz -nv
-mv M2aia-latest.tar.gz m2aia.tar.gz
-mkdir -p m2aia
-tar -xvf m2aia.tar.gz -C m2aia --strip-components=1
+mkdir -p /home/$USER/m2aia
+tar -xvf /home/$USER/M2aia-latest.tar.gz -C m2aia --strip-components=1
 
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/m2aia/bin
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/m2aia/bin/MitkCore
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/$USER/m2aia/bin
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/$USER/m2aia/bin/MitkCore
 
-pip install  git+https://github.com/m2aia/pym2aia.git
+python3 -m venv .pym2aia
+source .py2maia/bin/activate
+pip install git+https://github.com/m2aia/pym2aia.git
 ```
  
 
