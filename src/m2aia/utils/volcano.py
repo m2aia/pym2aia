@@ -17,7 +17,6 @@ def volcano_plot_data(image: m2.ImzMLReader, mask: np.array, xs, pThreshold = 0.
     for i, x in enumerate(xs):
         p_fc_sig[i,:2] = volcano_data(image, mask, x)
     p_fc_sig[:,0][p_fc_sig[:,0] == 0] = np.finfo(np.float64).tiny
-
     p_fc_sig[:,0] = fdr_correction(p_fc_sig[:,0])[1]
     p_fc_sig[:,2] = np.logical_and(p_fc_sig[:,0] < pThreshold, abs(p_fc_sig[:,1]) > fcThreshold)
 

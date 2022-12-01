@@ -160,4 +160,6 @@ def bin_peaks(image: m2.ImzMLReader, mask: np.array = None):
     ys_list = np.array(ys_list)[sort_indices]
     ss_list = np.array(ss_list)[sort_indices]
 
+    print("Start binning on ", len(xs_list), "individual m/z values found in", np.sum(mask>0), "pixels.")
+
     return group_binning(xs_list, ys_list, ss_list, grouper_strict)

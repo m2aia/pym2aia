@@ -11,6 +11,7 @@ def get_library_name():
     else:
         # M2aiaCoreIO is in InstallDir/bin/MitkCore/
         p = pathlib.Path(ctypes.util.find_library("M2aiaCoreIO"))
+        print(p.absolute())
         if p:
             os.add_dll_directory(p.parent)
             os.add_dll_directory(p.parent.parent)
