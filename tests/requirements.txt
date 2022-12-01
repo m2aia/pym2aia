@@ -4,3 +4,4 @@ numpy
 seaborn
 seaborn_image
 SimpleITK
+wget
