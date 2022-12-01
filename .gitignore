@@ -10,5 +10,4 @@ venv*
 *.zip
 *.mis
 *.jpg
-*.txt
 *.h5
