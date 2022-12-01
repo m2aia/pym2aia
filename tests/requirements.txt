@@ -1,0 +1,6 @@
+matplotlib==3.5
+m2aia
+numpy
+seaborn
+seaborn_image
+SimpleITK
