@@ -37,6 +37,7 @@ Check the [Dockerfile](Dockerfile) for installation hints.
 Download the latest version of [M²aia](https://m2aia.de/).
 
 It is required to promote a system variable pointing to:<br>
+``` C:\Users\User\Documents\M2aiaWorkbench 2022.10.00\bin ``` <br>
 ``` C:\Users\User\Documents\M2aiaWorkbench 2022.10.00\bin\MitkCore ```
 
 
