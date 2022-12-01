@@ -11,3 +11,6 @@ venv*
 *.mis
 *.jpg
 *.h5
+*.zip
+*.imzML
+*.ibd
