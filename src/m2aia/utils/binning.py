@@ -1,6 +1,6 @@
 from collections import Counter
 import numpy as np
-
+import m2aia as m2
 
 # def grouperRelaxed(xs, ys, sources, tolerance):
 #   meanMass = np.mean(xs)
@@ -66,10 +66,24 @@ def grouper_strict(xs, ys, sources, tolerance):
     return mean_xs, counts
 
 
-def group_binning(xs, ys, sorted_sources, grouper, tolerance=0.002):
+def group_binning(xs, ys, ss, grouper, tolerance=0.002):
     """
     xs: sorted list of m/z values of peaks
-    ys: sorted list of 
+    ys: sorted list of intensities according to xs sorting
+    ss: sorted list of source indices according to xs sorting
+    grouper: binning method
+    tolerance: TODO
+
+    Returns
+
+    bin_assignments:
+        assigns each entry in sorted list to the corresponding bin, so that
+        xs[bin_assignments==k] returns all xs values corresponding to the k'th bin
+    bin_xs:
+        new xs center values of the bins
+    counts:
+        the count of pixels associated with each peak
+
     """
 
     d = xs[1:] - xs[:-1]
@@ -87,7 +101,7 @@ def group_binning(xs, ys, sorted_sources, grouper, tolerance=0.002):
         gapIdx = np.argmax(d[left:right-1]) + left + 1
 
         # check left interval
-        l = grouper(xs[left: gapIdx], ys[left: gapIdx], sorted_sources[left: gapIdx], tolerance)
+        l = grouper(xs[left: gapIdx], ys[left: gapIdx], ss[left: gapIdx], tolerance)
         if l == None:
             boundary.append((left,gapIdx))
         else:
@@ -98,7 +112,7 @@ def group_binning(xs, ys, sorted_sources, grouper, tolerance=0.002):
             current_id+=1
 
         # check right interval
-        r = grouper(xs[gapIdx: right], ys[gapIdx: right], sorted_sources[gapIdx:right], tolerance)
+        r = grouper(xs[gapIdx: right], ys[gapIdx: right], ss[gapIdx:right], tolerance)
         if r == None:
             boundary.append((gapIdx, right))
         else:
@@ -108,11 +122,42 @@ def group_binning(xs, ys, sorted_sources, grouper, tolerance=0.002):
             bin_xs.append(x)
             current_id+=1
 
-    tmp = np.zeros_like(bin_assignments)
+    bin_assign = np.zeros_like(bin_assignments)
     for i, k in enumerate(list( dict.fromkeys(bin_assignments.tolist()))):
-        tmp[bin_assignments==k] = i #bin id starts by 1
+        bin_assign[bin_assignments==k] = i #bin id starts by 1
 
     bin_xs = np.array(bin_xs)
     sort_indices = np.argsort(bin_xs)
 
-    return tmp, bin_xs[sort_indices], [bin_counts[c] for c in sort_indices]
+    return bin_assign, bin_xs[sort_indices], [bin_counts[c] for c in sort_indices]
+
+
+def bin_peaks(image: m2.ImzMLReader, mask: np.array = None):
+    
+    print("Bin peaks for :", image.GetSpectrumType())
+    if "ProcessedCentroid" != image.GetSpectrumType():
+        raise TypeError("Image has to be of type ProcessedCentroid")
+
+    if mask is not None:
+        indices = image.GetIndexArray()[mask>0]
+    else:
+        indices = image.GetIndexArray()[image.GetMaskArray()>0]
+
+    # BIN PEAKS
+    xs_list = [] # list of all mz values
+    ys_list = [] # list of all intensities
+    ss_list = [] # list of source indices
+
+    for i in indices:
+        xs,ys = image.GetSpectrum(i)
+        xs_list.extend(xs)
+        ys_list.extend(ys)
+        ss_list.extend(len(xs) * [i])
+
+    # sort lists
+    sort_indices = np.argsort(xs_list)
+    xs_list = np.array(xs_list)[sort_indices]
+    ys_list = np.array(ys_list)[sort_indices]
+    ss_list = np.array(ss_list)[sort_indices]
+
+    return group_binning(xs_list, ys_list, ss_list, grouper_strict)

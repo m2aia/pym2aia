@@ -1,5 +1,5 @@
 from typing import Literal
-from ctypes import create_string_buffer, c_void_p, c_uint32, c_char_p, c_double, c_float, POINTER
+from ctypes import create_string_buffer, c_void_p, c_uint32, c_char_p, c_double, c_float, c_ushort , POINTER
 import pathlib
 import numpy as np
 import SimpleITK as sitk
@@ -91,6 +91,14 @@ class ImzMLReader(object):
         self.lib.GetImageArrayFloat32.argtypes = [
             HANDLE_PTR, c_double, c_double, POINTER(c_float)]
         self.lib.GetImageArrayFloat32.restype = None
+
+        self.lib.GetMaskArray.argtypes = [
+            HANDLE_PTR, POINTER(c_ushort)]
+        self.lib.GetMaskArray.restype = None
+
+        self.lib.GetIndexArray.argtypes = [
+            HANDLE_PTR, POINTER(c_uint32)]
+        self.lib.GetIndexArray.restype = None
 
         self.lib.GetSpectrumType.argtypes = [HANDLE_PTR]
         self.lib.GetSpectrumType.restype = c_uint32
@@ -270,6 +278,38 @@ class ImzMLReader(object):
             POINTER(c_double)))
         return origin
 
+    def GetMaskArray(self):
+        self.CheckHandle()
+        slice = np.zeros(self.GetShape()[::-1], dtype=np.ushort)
+        self.lib.GetMaskArray(self.handle, slice.ctypes.data_as(POINTER(c_ushort)))
+        return slice
+
+    def GetMaskImage(self):
+        self.CheckHandle()
+        slice = self.GetMaskArray()
+        spacing = self.GetSpacing()
+        origin = self.GetOrigin()
+        I = sitk.GetImageFromArray(slice)
+        I.SetSpacing(spacing)
+        I.SetOrigin(origin)
+        return I
+
+    def GetIndexArray(self):
+        self.CheckHandle()
+        slice = np.zeros(self.GetShape()[::-1], dtype=np.uint32)
+        self.lib.GetIndexArray(self.handle, slice.ctypes.data_as(POINTER(c_uint32)))
+        return slice
+
+    def GetIndexImage(self):
+        self.CheckHandle()
+        slice = self.GetIndexArray()
+        spacing = self.GetSpacing()
+        origin = self.GetOrigin()
+        I = sitk.GetImageFromArray(slice)
+        I.SetSpacing(spacing)
+        I.SetOrigin(origin)
+        return I
+    
     def GetArray(self, center, tol, dtype=np.float32, squeeze:bool=False):
         self.CheckHandle()
         xs = self.GetXAxis()

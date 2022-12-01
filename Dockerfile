@@ -4,29 +4,14 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 RUN apt-get install -q -y --no-install-recommends \
     libglu1-mesa-dev \
-    libtiff5-dev \
-    qtbase5-dev \
-    qtscript5-dev \
-    libqt5svg5-dev \
-    libqt5opengl5-dev \
-    libqt5xmlpatterns5-dev \
-    qtwebengine5-dev \
-    qttools5-dev \
-    libqt5charts5-dev \
-    libqt5x11extras5-dev \
-    qtxmlpatterns5-dev-tools \
-    libqt5webengine-data \
-    libopenslide-dev 
-
-
-RUN apt-get install -y -q --no-install-recommends \
+    libgomp1 \
+    libopenslide-dev \
     python3 \
     python3-pip \
-    python3-venv \
     git \
     wget
 
-RUN pip install tomli pyparsing packaging iniconfig exceptiongroup attrs pluggy pytest SimpleITK numpy
+RUN pip install SimpleITK numpy
 
 # m2aia/m2aia:latest-build containes the latest M2aia installer and required dependencies
 RUN mkdir -p /opt/m2aia /opt/packages
