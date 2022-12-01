@@ -1,7 +1,7 @@
-matplotlib==3.5
-m2aia
+matplotlib==3.5.3
 numpy
 seaborn
 seaborn_image
 SimpleITK
 wget
+mne
