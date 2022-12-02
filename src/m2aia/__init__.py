@@ -2,9 +2,53 @@ from .ImageIO import *
 from .Generators import *
 from .Dataset import *
 from .utils import *
-# from .Docker import *
+from .Library import get_library
+
+import os
+import logging
+
+def validate_environment():
+    search_path = pathlib.Path(os.environ['M2AIA_PATH'])
+    if search_path.is_dir() and search_path.joinpath("MitkCore").exists() and len([p for p in search_path.joinpath("MitkCore").glob("*M2aiaCoreIO*")]):
+        logging.debug("os.environ['M2AIA_PATH'] = " + os.environ["M2AIA_PATH"])
+    else:
+        logging.error("os.environ['M2AIA_PATH'] = " + os.environ["M2AIA_PATH"])
+        logging.error("Variable: M2AIA_PATH; Description: Binary search path for M2aia's libraries.")
+        if not search_path.exists():
+            logging.error("\t- does not exist!")
+        
+        if search_path.is_file():
+            logging.error("\t- is not a directory!")
+        
+        if not search_path.joinpath("MitkCore").exists():
+            logging.error("\t- does not contain a folder called MitkCore!")
+
+        if not len([p for p in search_path.joinpath("MitkCore").glob("*M2aiaCoreIO*")]):
+            logging.error("\t- missing library MitkCore/libM2aiaCoreIO.so or MitkCore/M2aiaCoreIO.dll!")
+        
+        logging.error("You can fix this problem by adding 'M2AIA_PATH' to your system environment variables. To do so, download the latest M2aia binaries from https://m2aia.github.io/m2aia.")
+        raise ImportError("Loading M2aia was not possible!")
+
+
+def prepare_environment():
+    # os.environ["M2AIA_DEBUG"] = ""
+    logging.basicConfig(format='%(levelname)s: %(message)s')
+    if "M2AIA_DEBUG" in os.environ:
+        logging.basicConfig(format='%(levelname)s:%(message)s', level = logging.DEBUG)
+
+    # default search path is pointing to packaged binaries
+    if not "M2AIA_PATH" in os.environ:
+        os.environ["M2AIA_PATH"] = str(pathlib.Path(os.path.abspath(__file__)).parent.joinpath("binaries/bin"))
+        logging.debug("Default library search path: " + os.environ["M2AIA_PATH"])
+    else:
+        logging.debug("Manually defined library search path: " + os.environ["M2AIA_PATH"])
+
+
+prepare_environment()
+validate_environment()
 
 # dry-load M2aia binary libraries
-from .Library import load_m2aia_library
-lib = load_m2aia_library()
-del lib
+get_library()
+
+
+

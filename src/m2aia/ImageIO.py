@@ -4,7 +4,7 @@ import pathlib
 import numpy as np
 import SimpleITK as sitk
 
-from .Library import load_m2aia_library
+from .Library import get_library
 
 
 
@@ -59,7 +59,7 @@ class ImzMLReader(object):
         self.smoothing = smoothing
         self.smoothing_hws = smoothing_half_window_size
 
-        self.lib = load_m2aia_library()
+        self.lib = get_library()
 
         HANDLE_PTR = c_void_p
 
