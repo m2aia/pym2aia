@@ -26,8 +26,8 @@ if not windows_archive.exists():
 binaries_root=pathlib.Path("src/m2aia/binaries")
 binaries_root.mkdir(exist_ok=True)
 
-# windows_root=list(windows_extracted.glob("*windows*"))[0]
-linux_root=list(linux_extracted.glob("*linux*"))[0]
+windows_root=list(windows_extracted.glob("*windows*"))[0]
+# linux_root=list(linux_extracted.glob("*linux*"))[0]
 
-shutil.copytree(linux_root, binaries_root, dirs_exist_ok=True)
-# shutil.copytree(windows_root, binaries_root, dirs_exist_ok=True)
+# shutil.copytree(linux_root, binaries_root, dirs_exist_ok=True)
+shutil.copytree(windows_root, binaries_root, dirs_exist_ok=True)

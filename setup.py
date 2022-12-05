@@ -27,10 +27,10 @@ setuptools.setup(
     ],
     packages=find_namespace_packages(where='src'),
     package_dir={"": "src"},
-    include_package_data=True,
-    # package_data={
-    #     "m2aia.binaries": ["*","**/*","**/**/*"],
-    #     },
+    # include_package_data=True,
+    package_data={
+        "m2aia.binaries": ["*","**/*","**/**/*"],
+        },
     python_requires=">=3.8",
     install_requires=[
           'wheel',
