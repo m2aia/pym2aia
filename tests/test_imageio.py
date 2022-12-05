@@ -1,8 +1,8 @@
 from unittest import TestCase
-import src.m2aia as m2
+import m2aia as m2
 import numpy as np
-import sys
 import pathlib
+
 def getTestData(relativePath:str)->str:
     return str(pathlib.Path(__file__).parent.joinpath(relativePath))
 
