@@ -1,22 +1,12 @@
 import setuptools
-from setuptools import find_packages
+from setuptools import find_namespace_packages
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-# try:
-#     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
-#     class bdist_wheel(_bdist_wheel):
-#         def finalize_options(self):
-#             _bdist_wheel.finalize_options(self)
-#             self.root_is_pure = False
-# except ImportError:
-#     bdist_wheel = None
-
-
 setuptools.setup(
     name="pym2aia",
-    version="0.1.0",
+    version="0.2.6",
     author="Jonas Cordes",
     author_email="j.cordes@hs-mannheim.de",
     description="Provide interfaces for M2aia.",
@@ -35,12 +25,16 @@ setuptools.setup(
         "Topic :: Scientific/Engineering :: Image Processing",
         "Development Status :: 3 - Alpha"
     ],
-    packages=find_packages(where='src'),
-    package_dir={"": "src"},    
+    packages=find_namespace_packages(where='src'),
+    package_dir={"": "src"},
+    # include_package_data=True,
+    package_data={
+        "m2aia.binaries": ["*","**/*","**/**/*"],
+        },
     python_requires=">=3.8",
     install_requires=[
           'wheel',
           'numpy',
           'SimpleITK'
-      ]
+      ],
 )
