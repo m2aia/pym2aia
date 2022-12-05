@@ -7,6 +7,7 @@ import sys
 
 pathlib.Path("install_binaries").mkdir(exist_ok=True)
 binaries_root=pathlib.Path("src/m2aia/binaries")
+shutil.rmtree(binaries_root, ignore_errors=True)
 binaries_root.mkdir(exist_ok=True)
 
 
