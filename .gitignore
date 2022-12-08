@@ -15,4 +15,4 @@ venv*
 *.imzML
 *.ibd
 install_binaries/
-src/m2aia/binaries/
+src/m2aia/bin/
