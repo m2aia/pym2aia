@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="pym2aia",
-    version="0.2.6",
+    version="0.3.0",
     author="Jonas Cordes",
     author_email="j.cordes@hs-mannheim.de",
     description="Provide interfaces for M2aia.",
@@ -29,7 +29,8 @@ setuptools.setup(
     package_dir={"": "src"},
     # include_package_data=True,
     package_data={
-        "m2aia.binaries": ["*","**/*","**/**/*"],
+        "m2aia.bin.linux": ["*"],
+        "m2aia.bin.windows": ["*"],
         },
     python_requires=">=3.8",
     install_requires=[
