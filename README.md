@@ -4,7 +4,14 @@ M²aia is an interactive desktop application for visualization and processing of
 
 Install pyM2aia in a [virtual environment](https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-and-using-virtual-environments).
 
-## Ubuntu/Linux
+``` pip install -i https://test.pypi.org/simple/ pym2aia ```
+
+## Requirements on Windows
+
+Microsoft Visual C++ Redistributable latest supported downloads:
+https://learn.microsoft.com/de-de/cpp/windows/latest-supported-vc-redist?view=msvc-170
+
+## Requirements on Ubuntu/Linux
 
 Runtime requirements:
 ```
@@ -16,8 +23,6 @@ apt-get install -q -y --no-install-recommends \
     python3-pip
 ```
 
-```pip install https://github.com/m2aia/pym2aia/releases/download/v0.2.6/pym2aia-0.2.6-py3-none-linux_x86_64.whl```
-
 ### Known issues
 
 The following Warnings can be ignored:
@@ -25,10 +30,6 @@ The following Warnings can be ignored:
 
 - "WARNING: In load_impl at /opt/mitk/Modules/CppMicroServices/core/src/util/usUtils.cpp:76 : libMitk\<XY\>.so: cannot open shared object file: No such file or directory"
 
-
-
-## Windows
-```pip install https://github.com/m2aia/pym2aia/releases/download/v0.2.6/pym2aia-0.2.6-py3-none-win_amd64.whl```
 
 ## Examples
 
