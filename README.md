@@ -4,7 +4,7 @@ M²aia is an interactive desktop application for visualization and processing of
 
 Install pyM2aia in a [virtual environment](https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-and-using-virtual-environments).
 
-``` pip install -i https://test.pypi.org/simple/ pym2aia ```
+``` pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pym2aia ```
 
 ## Requirements on Windows
 
