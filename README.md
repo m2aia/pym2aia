@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/554270311.svg)](https://zenodo.org/badge/latestdoi/554270311)
+
 M²aia is an interactive desktop application for visualization and processing of mass spectrometry (MS) imaging data. Please visit [https://m2aia.github.io/m2aia](https://m2aia.github.io/m2aia) for further information.
 
 # Installation
