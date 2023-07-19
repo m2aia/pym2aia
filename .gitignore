@@ -1,5 +1,6 @@
 dist
 build
+sphinx-build
 __pycache__
 *.egg-info
 m2aia-*
