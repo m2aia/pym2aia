@@ -2,42 +2,6 @@ from collections import Counter
 import numpy as np
 import m2aia as m2
 
-# def grouperRelaxed(xs, ys, sources, tolerance):
-#   meanMass = np.mean(xs)
-
-#   ## all peaks in range?
-#   if any(np.abs(xs - meanMass) / meanMass > tolerance):
-#     return None
-
-#   counts = Counter(sources)
-#   ## choose highest peak in dulicates
-#   duplicates = [key for key, count in counts.items() if count >1]
-#   if any(duplicates):
-
-#     ys_ids = np.argsort(ys[::-1])
-#     ys = ys[ys_ids]
-#     xs = xs[ys_ids]
-#     sources = sources[ys_ids]
-
-#     unique_ids = []
-#     for i, s in enumerate(sources):
-#         if ~len(duplicates):
-#             break
-#         if s in duplicates:
-#             duplicates.remove(id)
-#             unique_ids.append(xs[i])
-
-
-#     noDup <- !duplicated(samples)
-
-#     noDup[s$ix] <- noDup
-
-#     ## replace mass corresponding to highest intensity
-#     mass[noDup] <- mean(mass[noDup])
-
-#     return(mass)
-  
-
 ## .grouperStrict
 ##  strict grouping function
 ##  Don't allow peaks of one sample in the same bin.
