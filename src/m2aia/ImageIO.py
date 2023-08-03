@@ -166,6 +166,16 @@ class ImzMLReader(object):
             HANDLE_PTR, c_void_p, c_uint32, POINTER(c_float)]
         self.lib.GetIntensities.restype = None
 
+        self.lib.WriteContinuousCentroidImzML.argtypes = [
+            HANDLE_PTR, c_char_p, POINTER(c_double), c_uint32]
+        self.lib.WriteContinuousCentroidImzML.restype = None
+
+        self.lib.SetTolerance.argtypes = [HANDLE_PTR, c_float]
+        self.lib.SetTolerance.restype = None
+
+        self.lib.GetTolerance.argtypes = [HANDLE_PTR]
+        self.lib.GetTolerance.restype = c_float
+
         self.x_axis = None
 
         self.imzML_path = imzML_path
@@ -245,6 +255,14 @@ class ImzMLReader(object):
             POINTER(c_double)))
 
         return self
+    
+    def WriteContinuousCentroidImzML(self, path : str, centroids):
+        cPath = create_string_buffer(path.encode())
+        
+        centroids = np.array(centroids, dtype=np.double)
+        self.lib.WriteContinuousCentroidImzML(self.handle, cPath, centroids.ctypes.data_as(
+            POINTER(c_double)), len(centroids))
+
 
     def CheckHandle(self):
         ''' Check if the handle was initialized properly.
@@ -292,6 +310,12 @@ class ImzMLReader(object):
 
     def SetPooling(self, strategy: m2Pooling):
         self.pooling = strategy
+
+    def SetTolerance(self, tol: np.float32):
+        self.lib.SetTolerance(self.handle, tol)
+
+    def GetTolerance(self) -> np.float32:
+        return self.lib.GetTolerance(self.handle)
 
     def SetIntensityTransformation(self, strategy: m2IntensityTransformation):
         self.intensity_transformation = strategy
