@@ -446,7 +446,8 @@ class ImzMLReader(object):
 
     def GetArray(self, center, tol, dtype=np.float32, squeeze: bool = False) -> np.ndarray:
         ''' Get the (ion) image data as numpy array.
-        The pixel values are the pooled intensities in the interval [center-tol, center+tol] of the spectra.
+        The pixel values are the pooled intensities (ie. pooling strategies like 
+        the 'Mean', 'Median', 'Maximum', or 'Sum') in the interval [center-tol, center+tol] of the spectra.
 
         :return: Numpy array of size [x,y,z] with dtype=dtype.
 
@@ -481,7 +482,8 @@ class ImzMLReader(object):
 
     def GetImage(self, center, tol, dtype=np.float32) -> sitk.Image:
         ''' Get the (ion) image data as parameterized SimpleITK.Image.
-        The pixel values are the pooled intensities in the interval [center-tol, center+tol] of the spectra.
+        
+        :meth:`m2aia.ImzMLReader.GetArray`
 
         :return: sitk.Image of size [x,y,z] with dtype=dtype.
 
