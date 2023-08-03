@@ -171,8 +171,17 @@ class ImzMLReader(object):
         self.imzML_path = imzML_path
         self.handle = None
         self.spectrum_type_id = None
-        self.spectrum_types = {0: "None", 1: "ContinuousProfile",
-                               2: "ProcessedProfile", 4: "ContinuousCentroid", 8: "ProcessedCentroid"}
+        self.spectrum_types = {
+                0 :'None' ,
+                1: 'Profile',
+                2: 'Centroid',
+                4: 'Continuous',
+                8: 'Processed',
+                21: 'ContinuousProfile',
+                41:'ProcessedProfile',
+                70: 'ContinuousCentroid',
+                128:'ProcessedCentroid'
+        }
 
     def __enter__(self):
         self.Execute()
