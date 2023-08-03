@@ -94,6 +94,10 @@ class ImzMLReader(object):
             HANDLE_PTR, POINTER(c_double)]
         self.lib.GetSpacing.restype = None
 
+        self.lib.GetOrigin.argtypes = [
+            HANDLE_PTR, POINTER(c_double)]
+        self.lib.GetOrigin.restype = None
+
         self.lib.GetXAxis.argtypes = [
             HANDLE_PTR, POINTER(c_double)]
         self.lib.GetXAxis.restype = None
