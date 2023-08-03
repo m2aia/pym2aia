@@ -24,10 +24,10 @@ def load_library_dependencies_recursively(search_path : pathlib.Path, library_na
 def load_m2aia_library():
     search_path = pathlib.Path(os.environ["M2AIA_PATH"])
 
-    target_library_path_parts = ["libM2aiaCoreIO.so"]
-    if search_path.joinpath("MitkCore").exists():
-        target_library_path_parts.append("MitkCore")
-        target_library_path_parts = target_library_path_parts[::-1]
+    target_library_path_parts = ["libM2aiaCore.so"]
+    # if search_path.joinpath("MitkCore").exists():
+    #     target_library_path_parts.append("MitkCore")
+    #     target_library_path_parts = target_library_path_parts[::-1]
     
     # Load custom M2aia libraries
     if "Linux" in platform.platform():
@@ -40,7 +40,7 @@ def load_m2aia_library():
     if "Windows" in platform.platform():
         os.add_dll_directory(search_path)
         # os.add_dll_directory(search_path.joinpath("MitkCore"))
-        return ctypes.cdll.LoadLibrary("M2aiaCoreIO.dll")
+        return ctypes.cdll.LoadLibrary("M2aiaCore.dll")
 
 def get_library():
     try:
