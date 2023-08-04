@@ -14,7 +14,7 @@ Complete processing examples with focus on deep learning can be found on [pym2ai
 
 Example create ion image:
 
-```
+```python
 import m2aia as m2
 
 I = m2.ImzMLReader("path/to/imzMl/file.imzML")
@@ -29,7 +29,7 @@ i_2 = I.GetArray(center_mz, 75)
 
 
 Example write continuous centroid imzML:
-```
+```python
 import m2aia as m2
 import numpy as np
 
