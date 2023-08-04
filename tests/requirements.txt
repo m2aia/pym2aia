@@ -5,3 +5,4 @@ seaborn_image
 SimpleITK
 wget
 mne
+tensorflow
