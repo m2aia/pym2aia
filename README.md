@@ -12,7 +12,7 @@ _Note: the current version of pyM2aia is currently hosted only for testing on ht
 pyM2aia offers a interface to [M2aia’s](https://github.com/m2aia/m2aia) imzML reader and signal processing utilities.
 Complete processing examples with focus on deep learning can be found on [pym2aia-examples](https://github.com/m2aia/pym2aia-examples)
 
-Example usage:
+Example create ion image:
 
 ```
 import m2aia as m2
@@ -22,7 +22,30 @@ I.SetNormalization(m2.m2NormalizationTIC)
 I.SetIntensityTransformation(m2.m2IntensityTransformationSquareRoot)
 I.Execute()
 ys_2 = I.GetMeanSpectrum()
-i_2 = I.GetArray(imz, 75)
+# get the ion image as array
+center_mz = 1123.43
+i_2 = I.GetArray(center_mz, 75)
+```
+
+
+Example write continuous centroid imzML:
+```
+import m2aia as m2
+import numpy as np
+
+# load a coninuous profile imzML
+I = m2.ImzMLReader("path/to/imzMl/file.imzML")
+# apply signal processing here
+I.Execute()
+
+# Find/load centroids ...
+# centroids = [x for x in range(2000,3000,20)]
+
+# csv with i.e. 3 columns with header line ('mz','min','max')
+centroids = np.genfromtxt("path/to/csv/centroids.csv", delimiter=',', skip_header=1)[:,0]
+
+I.SetTolerance(50)
+I.WriteContinuousCentroidImzML("/tmp/continuous_centroid.imzML", centroids)
 ```
 
 [Developer Documentation](https://data.jtfc.de/pym2aia/sphinx-build/html/m2aia.html#module-m2aia.ImageIO)
