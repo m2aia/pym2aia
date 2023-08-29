@@ -15,6 +15,7 @@ try:
     linux_archive = pathlib.Path("install_binaries/linux.tar.gz")
     linux_extracted = pathlib.Path("install_binaries/linux")
     if not linux_archive.exists():
+        print("Try start download for:",f"https://data.jtfc.de/latest/linux/M2aia-{os.environ['M2AIA_VERSION']}.tar.gz")
         wget.download(f"https://data.jtfc.de/latest/linux/M2aia-{os.environ['M2AIA_VERSION']}.tar.gz", str(linux_archive))
         with tarfile.open(str(linux_archive)) as f:
             f.extractall(str(linux_extracted))
@@ -41,6 +42,7 @@ try:
     windows_archive = pathlib.Path("install_binaries/windows.zip")
     windows_extracted = pathlib.Path("install_binaries/windows")
     if not windows_archive.exists():
+        print("Try start download for:",f"https://data.jtfc.de/latest/windows/M2aia-{os.environ['M2AIA_VERSION']}.zip")
         wget.download(f"https://data.jtfc.de/latest/windows/M2aia-{os.environ['M2AIA_VERSION']}.zip", str(windows_archive))
         with zipfile.ZipFile(str(windows_archive)) as f:
             f.extractall(str(windows_extracted))
