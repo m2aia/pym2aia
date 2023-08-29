@@ -33,8 +33,8 @@ try:
         d = pathlib.Path(d)
         print(str(d), "->", str(linux_bin_root.joinpath(d.name)))
         shutil.copy(str(d),str(linux_bin_root.joinpath(d.name)))
-except:
-    print("Linux binaries not found!")
+except Exception as e:
+    print("Linux binaries not found!", e)
 
 # START WINDOWS
 print("=================================================")
@@ -59,5 +59,5 @@ try:
             continue
         print(str(lib), "->", str(windows_bin_root.joinpath(lib.name)))
         shutil.copy(str(lib),str(windows_bin_root.joinpath(lib.name)))
-except:
-    print("Windows binaries not found!")
+except Exception as e:
+    print("Windows binaries not found!", e)
