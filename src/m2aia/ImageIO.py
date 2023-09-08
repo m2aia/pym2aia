@@ -228,9 +228,11 @@ class ImzMLReader(object):
         * max_spectrum
 
         '''
+
         cPath = create_string_buffer(self.imzML_path.encode())
         parameters = self.GetParametersAsFormattedString()
         cParamPath = create_string_buffer(parameters.encode())
+
         self.handle = self.lib.CreateImageHandle(cPath, cParamPath)
 
         self.number_of_spectra = self.lib.GetNumberOfSpectra(self.handle)

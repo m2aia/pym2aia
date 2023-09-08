@@ -26,9 +26,9 @@ try:
     print("linux_root:", linux_root)
     os.environ["M2AIA_PATH"] = str(linux_root.joinpath("bin").absolute())
     print("M2AIA_PATH:", os.environ["M2AIA_PATH"])
-
+    
     # init module
-    import m2aia
+    import src.m2aia
     invoked_libraries = os.environ["M2AIA_LIBRARIES"]
     print("invoked_libraries:", invoked_libraries)
 
@@ -40,6 +40,7 @@ try:
         d = pathlib.Path(d)
         print(str(d), "->", str(linux_bin_root.joinpath(d.name)))
         shutil.copy(str(d),str(linux_bin_root.joinpath(d.name)))
+
 except Exception as e:
     print("Linux binaries not found!", e)
 
