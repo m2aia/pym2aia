@@ -13,9 +13,8 @@ class TestWriteImzML(TestCase):
     def setUp(self):
         random.seed(42)
         self.Image = m2.ImzMLReader(getTestData("data/test.imzML"))
+        self.Image.SetBaselineCorrection(m2.m2BaselineCorrectionTopHat, 50)
         self.Image.Execute()
-
-        
 
     def test_WriteImzML_ContinuousCentroids(self):
         self.Image.SetTolerance(50)
