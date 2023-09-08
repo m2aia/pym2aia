@@ -1,5 +1,5 @@
 import m2aia as m2
-import tensorflow as tf
+
 from unittest import TestCase
 import pathlib
 import numpy as np
