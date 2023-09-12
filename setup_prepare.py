@@ -18,18 +18,18 @@ def prepare():
     parser.add_argument("--windows", action="store_true")
     args = parser.parse_args()
 
-    # prepare source tree
     binaries_root=pathlib.Path("src/m2aia/bin/")
     # clean binaries
     shutil.rmtree(binaries_root, ignore_errors=True)
-    # recreate
-    binaries_root.mkdir(exist_ok=True, parents=True)
+    binaries_root.mkdir(exist_ok=True)
     
     # ---------------------------------------------------------------
     if args.linux:
         linux_archive = pathlib.Path(args.linux_archive)
         if args.download:
             print("Try start download for:",f"https://data.jtfc.de/latest/linux/M2aia-{args.version}.tar.gz")
+            if linux_archive.exists():
+                os.remove(linux_archive)
             wget.download(f"https://data.jtfc.de/latest/linux/M2aia-{args.version}.tar.gz", str(linux_archive))
 
         if linux_archive.exists():
@@ -43,14 +43,12 @@ def prepare():
             import src.m2aia
 
             invoked_libraries = os.environ["M2AIA_LIBRARIES"]
-            linux_bin_root = binaries_root.joinpath('linux')
-            linux_bin_root.mkdir(exist_ok=True)
 
             # COPY dependent libraries to the installer location
             for d in invoked_libraries.split(';'):
                 d = pathlib.Path(d)
-                print(str(d), "->", str(linux_bin_root.joinpath(d.name)))
-                shutil.copy(str(d),str(linux_bin_root.joinpath(d.name)))
+                print(str(d), "->", str(binaries_root.joinpath(d.name)))
+                shutil.copy(str(d),str(binaries_root.joinpath(d.name)))
         else:
             print("Linux Archive not found!")
             
@@ -59,6 +57,8 @@ def prepare():
         windows_archive = pathlib.Path(args.windows_archive)
         if args.download:
             print("Try start download for:",f"https://data.jtfc.de/latest/windows/M2aia-{args.version}.zip")
+            if windows_archive.exists():
+                os.remove(windows_archive)
             wget.download(f"https://data.jtfc.de/latest/windows/M2aia-{args.version}.zip", str(windows_archive))
 
         if windows_archive.exists():
@@ -68,16 +68,14 @@ def prepare():
                 f.extractall(str(windows_extracted))
             windows_root=list(windows_extracted.glob("M2aia*"))[0]
             os.environ["M2AIA_PATH"] = str(windows_root.joinpath("bin").absolute())
-            windows_bin_root = binaries_root.joinpath('windows')
-            windows_bin_root.mkdir(exist_ok=True)
-
+            
             globs = [f for f in windows_root.joinpath('bin').glob("*.dll")]
             for lib in globs:
                 if "Qt5" in str(lib):
                     print("FOUND => ", lib)
                     continue
-                print(str(lib), "->", str(windows_bin_root.joinpath(lib.name)))
-                shutil.copy(str(lib),str(windows_bin_root.joinpath(lib.name)))
+                print(str(lib), "->", str(binaries_root.joinpath(lib.name)))
+                shutil.copy(str(lib),str(binaries_root.joinpath(lib.name)))
         else:
             print("Windows Archive not found!")
             
