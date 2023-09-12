@@ -5,8 +5,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="pym2aia",
-    version="0.3.0",
+    name="m2aia",
+    version="0.4.99",
     author="Jonas Cordes",
     author_email="j.cordes@hs-mannheim.de",
     description="Provide interfaces for M2aia.",
@@ -29,8 +29,7 @@ setuptools.setup(
     package_dir={"": "src"},
     # include_package_data=True,
     package_data={
-        "m2aia.bin.linux": ["*"],
-        "m2aia.bin.windows": ["*"],
+        "m2aia.bin": ["*"],
         },
     python_requires=">=3.8",
     install_requires=[
@@ -38,4 +37,5 @@ setuptools.setup(
           'numpy',
           'SimpleITK'
       ],
+    
 )
