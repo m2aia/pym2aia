@@ -41,7 +41,16 @@ def load_m2aia_library():
     search_path = pathlib.Path(os.environ["M2AIA_PATH"])
     target_library_path_parts = ["libM2aiaCore.so"]
     
-    if "Linux" in platform.platform():
+    if "Windows" in platform.platform():
+        os.add_dll_directory(search_path)
+        # os.add_dll_directory(search_path.joinpath("MitkCore"))
+        return ctypes.cdll.LoadLibrary("M2aiaCore.dll")
+    
+    else: #"Linux" in platform.platform():
+
+        if "Darwin" in platform.platform():
+            raise ImportError("macOS/Darwin based systems are currently not tested.")
+
         dependencies = []
         for lib_name in target_library_path_parts:
             load_library_dependencies_recursively(search_path, lib_name, dependencies)
@@ -51,12 +60,9 @@ def load_m2aia_library():
             ctypes.cdll.LoadLibrary(dep)
         
         return ctypes.cdll.LoadLibrary((search_path /  "libM2aiaCore.so").absolute())
-        
+    
+    
 
-    if "Windows" in platform.platform():
-        os.add_dll_directory(search_path)
-        # os.add_dll_directory(search_path.joinpath("MitkCore"))
-        return ctypes.cdll.LoadLibrary("M2aiaCore.dll")
 
 def get_library():
     try:
