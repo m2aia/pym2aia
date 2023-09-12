@@ -34,14 +34,8 @@ def validate_environment():
 def prepare_environment():
     # os.environ["M2AIA_DEBUG"] = ""
     # default search path is pointing to packaged binaries
-    if not "M2AIA_PATH" in os.environ:
-        if "Linux" in platform.platform():
-            platform_name = "linux"
-        else:
-            platform_name = "windows"
-
-        os.environ["M2AIA_PATH"] = str(pathlib.Path(os.path.abspath(__file__)).parent.joinpath("bin",platform_name))
-
+    if not "M2AIA_PATH" in os.environ:        
+        os.environ["M2AIA_PATH"] = str(pathlib.Path(os.path.abspath(__file__)).parent.joinpath("bin"))
         logging.debug("Default library search path: ", os.environ["M2AIA_PATH"])
     else:
         logging.debug("Manually defined library search path: ", os.environ["M2AIA_PATH"])
