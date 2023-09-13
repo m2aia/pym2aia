@@ -190,7 +190,7 @@ class ImzMLReader(object):
                 21: 'ContinuousProfile',
                 41:'ProcessedProfile',
                 70: 'ContinuousCentroid',
-                128:'ProcessedCentroid'
+                138:'ProcessedCentroid'
         }
 
     def __enter__(self):
