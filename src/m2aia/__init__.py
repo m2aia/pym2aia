@@ -8,6 +8,13 @@ import os
 import logging
 import platform
 
+try:
+    import tensorflow
+    from .keras import KerasGenerators
+except:
+    pass
+
+
 def validate_environment():
     search_path = pathlib.Path(os.environ['M2AIA_PATH'])
     if search_path.is_dir() and (len([p for p in search_path.glob("**/*M2aiaCore*")])):

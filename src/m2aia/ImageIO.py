@@ -1,5 +1,5 @@
 from typing import Literal
-from typing import List
+from typing import List, Dict
 from ctypes import create_string_buffer, c_void_p, c_uint32, c_char_p, c_double, c_float, c_ushort, POINTER
 import pathlib
 import numpy as np
@@ -8,16 +8,17 @@ import SimpleITK as sitk
 from .Library import get_library
 
 
+m2NormalizationNone: str = 'None'
 m2NormalizationTIC: str = 'TIC'
 m2NormalizationSum: str = 'Sum'
 m2NormalizationMean: str = 'Mean'
 m2NormalizationMax: str = 'Max'
-m2NormalizationMedian: str = 'Median'
-m2NormalizationInFile: str = 'InFile'
 m2NormalizationRMS: str = 'RMS'
+m2NormalizationInternal: str = 'Internal'
+m2NormalizationExternal: str = 'External'
 m2Normalization = Literal[f"{m2NormalizationTIC}", f"{m2NormalizationSum}", f"{m2NormalizationMean}",
-                          f"{m2NormalizationMax}", f"{m2NormalizationMedian}", f"{m2NormalizationInFile}",
-                          f"{m2NormalizationRMS}", "None"]
+                          f"{m2NormalizationMax}", f"{m2NormalizationRMS}", f"{m2NormalizationInternal}",
+                          f"{m2NormalizationExternal}", f"{m2NormalizationNone}"]
 
 m2SmoothingSavitzkyGolay: str = "SavitzkyGolay"
 m2SmoothingGaussian: str = "Gaussian"
@@ -68,20 +69,11 @@ class ImzMLReader(object):
                  intensity_transformation: m2IntensityTransformation = "None",
                  pooling: m2Pooling = m2PoolingMaximum):
 
-        self.baseline_correction = baseline_correction
-        self.baseline_correction_hws = baseline_correction_half_window_size
-        self.intensity_transformation = intensity_transformation
-        self.normalization = normalization
-        self.pooling = pooling
-        self.smoothing = smoothing
-        self.smoothing_hws = smoothing_half_window_size
-
         self.lib = get_library()
 
         HANDLE_PTR = c_void_p
 
-        self.lib.CreateImageHandle.argtypes = [
-            c_char_p, c_char_p]
+        self.lib.CreateImageHandle.argtypes = [c_char_p]
         self.lib.CreateImageHandle.restype = HANDLE_PTR
 
         self.lib.DestroyImageHandle.argtypes = [HANDLE_PTR]
@@ -120,6 +112,10 @@ class ImzMLReader(object):
         self.lib.GetIndexArray.argtypes = [
             HANDLE_PTR, POINTER(c_uint32)]
         self.lib.GetIndexArray.restype = None
+
+        self.lib.GetNormalizationArray.argtypes =[
+            HANDLE_PTR, c_char_p, POINTER(c_double)]
+        self.lib.GetNormalizationArray.restype = None
 
         self.lib.GetSpectrumType.argtypes = [HANDLE_PTR]
         self.lib.GetSpectrumType.restype = c_uint32
@@ -170,11 +166,29 @@ class ImzMLReader(object):
             HANDLE_PTR, c_char_p, POINTER(c_double), c_uint32]
         self.lib.WriteContinuousCentroidImzML.restype = None
 
+        self.lib.SetSmoothing.argtypes = [HANDLE_PTR, c_char_p, c_uint32]
+        self.lib.SetSmoothing.restype = None
+
+        self.lib.SetBaselineCorrection.argtypes = [HANDLE_PTR, c_char_p, c_uint32]
+        self.lib.SetBaselineCorrection.restype = None
+        
+        self.lib.SetNormalization.argtypes = [HANDLE_PTR, c_char_p]
+        self.lib.SetNormalization.restype = None
+
+        self.lib.SetIntensityTransformation.argtypes = [HANDLE_PTR, c_char_p]
+        self.lib.SetIntensityTransformation.restype = None
+
+        self.lib.SetPooling.argtypes = [HANDLE_PTR, c_char_p]
+        self.lib.SetPooling.restype = None
+
         self.lib.SetTolerance.argtypes = [HANDLE_PTR, c_float]
         self.lib.SetTolerance.restype = None
 
         self.lib.GetTolerance.argtypes = [HANDLE_PTR]
         self.lib.GetTolerance.restype = c_float
+        
+        self.lib.Update.argtypes = [HANDLE_PTR]
+        self.lib.Update.restype = None
 
         self.x_axis = None
 
@@ -193,15 +207,63 @@ class ImzMLReader(object):
                 138:'ProcessedCentroid'
         }
 
-    def __enter__(self):
-        self.Execute()
-        return self
 
-    def __exit__(self, exc_type, exc_value, tb):
-        self.lib.DestroyImageHandle(self.handle)
+
+        self.baseline_correction = baseline_correction
+        self.baseline_correction_hws = baseline_correction_half_window_size
+        self.smoothing = smoothing
+        self.smoothing_hws = smoothing_half_window_size
+        self.normalization = normalization
+        self.intensity_transformation = intensity_transformation
+        self.pooling = pooling
+
+
+        # Read and initialize the image by creating a handle
+        self.Load()
+
 
     def __delete__(self):
         self.lib.DestroyImageHandle(self.handle)
+
+    def Load(self):
+        
+        if self.handle is not None:
+            self.lib.DestroyImageHandle(self.handle)
+
+        cPath = create_string_buffer(self.imzML_path.encode())
+        self.handle = self.lib.CreateImageHandle(cPath)
+
+        self.SetBaselineCorrection(self.baseline_correction, self.baseline_correction_hws)
+        self.SetSmoothing(self.smoothing, self.smoothing_hws)
+        self.SetNormalization(self.normalization)
+        self.SetIntensityTransformation(self.intensity_transformation)
+        self.SetPooling(self.pooling)
+
+        self.lib.Update(self.handle)
+
+        self.depth = self.lib.GetXAxisDepth(self.handle)
+
+        # mean overview spectrum
+        self.mean_spectrum = np.zeros(self.depth, dtype=np.float64)
+        self.lib.GetMeanSpectrum(self.handle, self.mean_spectrum.ctypes.data_as(
+            POINTER(c_double)))
+
+        # max overview spectrum
+        self.max_spectrum = np.zeros(self.depth, dtype=np.float64)
+        self.lib.GetMaxSpectrum(self.handle, self.max_spectrum.ctypes.data_as(
+            POINTER(c_double)))
+
+        self.number_of_spectra = self.lib.GetNumberOfSpectra(self.handle)
+        self.shape = self.GetShape()
+
+        self.spectrum_type_id = self.lib.GetSpectrumType(self.handle)
+        
+        # XAxis
+        self.x_axis = np.zeros(self.depth, dtype=np.float64)
+        self.lib.GetXAxis(self.handle, self.x_axis.ctypes.data_as(
+            POINTER(c_double)))
+
+        
 
     def path(self) -> pathlib.Path:
         '''Absolute path to the referenced imzML'''
@@ -215,50 +277,24 @@ class ImzMLReader(object):
         '''Name (including file ending) of the given imzML'''
         return self.path().name
 
-    def Execute(self):
-        ''' Run execute after all signal processing parameters are defined.
-        This method prepares the image object properties:
-
-        * number_of_spectra
-        * shape
-        * depth (size of the x axis)
-        * spectrum_type_id
-        * x_axis
-        * mean_spectrum
-        * max_spectrum
-
-        '''
-
-        cPath = create_string_buffer(self.imzML_path.encode())
-        parameters = self.GetParametersAsFormattedString()
-        cParamPath = create_string_buffer(parameters.encode())
-
-        self.handle = self.lib.CreateImageHandle(cPath, cParamPath)
-
-        self.number_of_spectra = self.lib.GetNumberOfSpectra(self.handle)
-        self.shape = self.GetShape()
-
-        self.depth = self.lib.GetXAxisDepth(self.handle)
-        self.spectrum_type_id = self.lib.GetSpectrumType(self.handle)
-
-        # XAxis
-        self.x_axis = np.zeros(self.depth, dtype=np.float64)
-        self.lib.GetXAxis(self.handle, self.x_axis.ctypes.data_as(
-            POINTER(c_double)))
-
-        # mean overview spectrum
-        self.mean_spectrum = np.zeros(self.depth, dtype=np.float64)
-        self.lib.GetMeanSpectrum(self.handle, self.mean_spectrum.ctypes.data_as(
-            POINTER(c_double)))
-
-        # max overview spectrum
-        self.max_spectrum = np.zeros(self.depth, dtype=np.float64)
-        self.lib.GetMaxSpectrum(self.handle, self.max_spectrum.ctypes.data_as(
-            POINTER(c_double)))
-
-        return self
     
     def WriteContinuousCentroidImzML(self, path : str, centroids):
+        ''' Given a list of centroids, write a continuous centroid imzML to the given path.
+            Use 'SetTolerance' to define the range query for each centroid (ppm).
+
+            :param path: Target file path the <path>.imzML and the <path>.ibd is written to.
+            :param centroids: a list of centroids.
+
+            Example usage::
+
+                import m2aia as m2
+
+                I = m2.ImzMLReader("path/to/imzMl/file.imzML")
+                I.Execute()
+                I.SetTolerance(75)
+                I.WriteContinuousCentroidImzML("path/to/imzMl/file.imzML", [300, 400, 500])
+
+        '''
         cPath = create_string_buffer(path.encode())
         
         centroids = np.array(centroids, dtype=np.double)
@@ -291,12 +327,27 @@ class ImzMLReader(object):
     def SetSmoothing(self, strategy: m2Smoothing, half_window_size=2):
         '''Set the spectrum smoothing strategy.
 
-        :args:
-            strategy: Set the smoothing strategy using one of the m2Smoothing literals.
-            half_window_size: 2*half_window_size + 1 spectrum points used for smoothing.
+        :param strategy: Set the smoothing strategy using one of the m2Smoothing literals.
+        :param half_window_size: 2*half_window_size + 1 spectrum points used for smoothing.
         '''
+        
         self.smoothing = strategy
         self.smoothing_hws = half_window_size
+        arg = create_string_buffer(strategy.encode())
+        self.lib.SetSmoothing(self.handle, arg, half_window_size)
+
+
+    def SetIntensityTransformation(self, strategy: m2IntensityTransformation):
+        '''
+        Set the intensity transformation strategy.
+
+        :param strategy: m2IntensityTransformation
+            Set the intensity transformation strategy using one of the m2IntensityTransformation literals.
+        '''
+        self.intensity_transformation = strategy
+        arg = create_string_buffer(strategy.encode())
+        self.lib.SetIntensityTransformation(self.handle, arg)
+
 
     def SetBaselineCorrection(self, strategy: m2BaselineCorrection, half_window_size=50):
         '''Set the baseline correction strategy.
@@ -306,21 +357,49 @@ class ImzMLReader(object):
         '''
         self.baseline_correction = strategy
         self.baseline_correction_hws = half_window_size
+        arg = create_string_buffer(strategy.encode())
+        self.lib.SetBaselineCorrection(self.handle, arg, half_window_size)
 
     def SetNormalization(self, strategy: m2Normalization):
+        '''
+        Set the normalization strategy.
+
+        :param strategy: m2Normalization
+            Set the normalization strategy using one of the m2Normalization literals.
+        '''
         self.normalization = strategy
+        arg = create_string_buffer(strategy.encode())
+        self.lib.SetNormalization(self.handle, arg)
 
     def SetPooling(self, strategy: m2Pooling):
+        '''
+        Set the pooling strategy.
+
+        :param strategy: m2Pooling
+            Set the pooling strategy using one of the m2Pooling literals.
+        '''
         self.pooling = strategy
+        arg = create_string_buffer(strategy.encode())
+        self.lib.SetPooling(self.handle, arg)
 
     def SetTolerance(self, tol: np.float32):
+        '''
+        Set the tolerance value.
+
+        :param tol: np.float32
+            The tolerance value to be set.
+        '''
         self.lib.SetTolerance(self.handle, tol)
 
     def GetTolerance(self) -> np.float32:
+        '''
+        Get the current tolerance value.
+
+        :return: np.float32
+            The current tolerance value.
+        '''
         return self.lib.GetTolerance(self.handle)
 
-    def SetIntensityTransformation(self, strategy: m2IntensityTransformation):
-        self.intensity_transformation = strategy
 
     def GetYDataType(self):
         '''Return the intensity data type defined in the imzML file.
@@ -372,14 +451,16 @@ class ImzMLReader(object):
             POINTER(c_uint32)))
         return pos
 
-    def GetMetaData(self) -> List[str]:
-        '''Returns a list of all meta data information retrieved by m2aia.
+    def GetMetaData(self) -> Dict[str,str]:
+        '''Returns a dictionary of all meta data information retrieved by m2aia.
 
         :return: List of strings of meta data.
         '''
         self.CheckHandle()
+        separator = '\t'
         data = self.lib.GetMetaDataDictionary(self.handle)
-        return data.decode("utf-8").split('\n')
+        lines = [f.strip() for f in data.decode("utf-8").split('\n') if len(f.strip()) > 0]
+        return { line.split(separator)[0]:line.split(separator)[1]  if len(line.split(separator)) > 0  else "true" for line in lines}
 
     def GetOrigin(self) -> np.array:
         '''Get the image origin.
@@ -445,6 +526,33 @@ class ImzMLReader(object):
         I.SetSpacing(spacing)
         I.SetOrigin(origin)
         return I
+    
+    def GetNormalizationArray(self, type) -> np.ndarray:
+        ''' Get a normalization image data as numpy array.
+
+        :return: Numpy array of size [x,y,z] with dtype=np.float64.
+        '''
+        self.CheckHandle()
+        arg = create_string_buffer(type.encode())
+        
+        image = np.zeros(self.GetShape()[::-1], dtype=np.float64)
+        self.lib.GetNormalizationArray(
+            self.handle, arg, image.ctypes.data_as(POINTER(c_double)))
+        return image
+
+    def GetNormalizationImage(self, type) -> sitk.Image:
+        ''' Get a normalization image data as parameterized SimpleITK.Image.
+        
+        :return: sitk.Image of size [x,y,z] with dtype=np.float64.
+        '''
+        self.CheckHandle()
+        slice = self.GetNormalizationArray(type)
+        spacing = self.GetSpacing()
+        origin = self.GetOrigin()
+        I = sitk.GetImageFromArray(slice)
+        I.SetSpacing(spacing)
+        I.SetOrigin(origin)
+        return I
 
     def GetArray(self, center, tol, dtype=np.float32, squeeze: bool = False) -> np.ndarray:
         ''' Get the (ion) image data as numpy array.
@@ -465,7 +573,7 @@ class ImzMLReader(object):
         xs = self.GetXAxis()
 
         if center < np.min(xs) or center > np.max(xs):
-            raise ValueError("Center is out of x-axis range!")
+            raise ValueError("Center is out of x-axis range!", center, tol, dtype, squeeze)
 
         slice = np.zeros(self.GetShape()[::-1], dtype=dtype)
         if dtype == np.float32:
