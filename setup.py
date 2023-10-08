@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="m2aia",
-    version="0.4.99",
+    version="0.5.1",
     author="Jonas Cordes",
     author_email="j.cordes@hs-mannheim.de",
     description="Provide interfaces for M2aia.",
@@ -35,7 +35,8 @@ setuptools.setup(
     install_requires=[
           'wheel',
           'numpy',
-          'SimpleITK'
+          'SimpleITK',
+          'wget'
       ],
     
 )

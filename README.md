@@ -52,6 +52,7 @@ python3 -m venv .venv
 pip3 install --upgrade pip
 
 source .venv/bin/activate
+# 
 
 pip install pym2aia
 ```
@@ -60,7 +61,7 @@ _Note:_ Different versions of the pypi package exists for windows and linux base
  - Linux: m2aia-x.x.x-py3-none-manylinux_2_31_x86_64.whl 
  - Windows: m2aia-x.x.x-py3-none-win-amd64.whl 
  - Source: m2aia-x.x.x.tar.gz
- 
+
 The Source distribution contains *.so and *.dll library files for both, windows and linux. You can try to install pyM²aia by extracting the archive and using the following command within the project folder:
 ```
 python setup.py install
@@ -81,7 +82,6 @@ import m2aia as m2
 I = m2.ImzMLReader("path/to/imzMl/file.imzML")
 I.SetNormalization(m2.m2NormalizationTIC)
 I.SetIntensityTransformation(m2.m2IntensityTransformationSquareRoot)
-I.Execute()
 ys_2 = I.GetMeanSpectrum()
 # get the ion image as array
 center_mz = 1123.43
@@ -96,8 +96,6 @@ import numpy as np
 
 # load a coninuous profile imzML
 I = m2.ImzMLReader("path/to/imzMl/file.imzML")
-# apply signal processing here
-I.Execute()
 
 # Find/load centroids ...
 # centroids = [x for x in range(2000,3000,20)]
