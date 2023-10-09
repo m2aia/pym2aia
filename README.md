@@ -54,7 +54,7 @@ pip3 install --upgrade pip
 source .venv/bin/activate
 # 
 
-pip install pym2aia
+pip install m2aia
 ```
 
 _Note:_ Different versions of the pypi package exists for windows and linux based systems:
