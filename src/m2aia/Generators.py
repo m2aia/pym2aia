@@ -8,21 +8,24 @@ class BatchGenerator():
         self.batch_size = batch_size
         self.shuffle = shuffle
         
-        self.elements = [i for i in range(len(self.dataset))]
-        missing_values = self.batch_size-(len(self.elements) % self.batch_size)
-        self.elements.extend(random.sample(self.elements, missing_values))
+        self.elements = [i for i in range(len(self.dataset)//self.batch_size)]
+        # missing_values = self.batch_size-(len(self.elements) % self.batch_size)
+        # self.elements.extend(random.sample(self.elements, missing_values))
         self.on_epoch_end()
 
     def on_epoch_end(self):
         if self.shuffle:
-            random.shuffle(self.elements)
+            random.shuffle(self.dataset.elements)
 
     def __len__(self):
         'Denotes the number of batches per epoch'
-        return len(self.elements) // self.batch_size
+        return len(self.elements)
 
     def __getitem__(self, index):
-        return self.dataset.getitems(self.elements[index*self.batch_size:(index+1)*self.batch_size])
+        batch_indices = list(range(index*self.batch_size,(index+1)*self.batch_size,1))
+        # print("batch_indices", batch_indices)
+        data, labels = self.dataset.getitems(batch_indices)
+        return data, labels
 
 
 # class IonImageBatchGenerator():

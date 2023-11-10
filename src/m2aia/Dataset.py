@@ -6,6 +6,7 @@ from . import ImageIO
 import hashlib
 import pathlib
 import numpy as np
+import random
 
 
 class BaseDataSet():
@@ -27,138 +28,278 @@ class BaseDataSet():
 
     def getitems(self, indexes: List[int]):
         pass
+   
+
 
 class SpectrumDataset(BaseDataSet):
     """Dataset for accession of individual spectra. 
     
     __len__ so that len(dataset) returns the size of the dataset, that is equal to the sum of the number of spectra (N) for each image.
     __getitem__ to support the indexing such that dataset[i] can be used to get i'th sample. i is pointing to indices 0,...,p-1,p,...,q-1, ... N, with p=#SpectraImage1, q=#SpectraImage2 etc...
-    neighborhood_size so that 2*neighborhood_size+1 is the window size
-
-    Parameters
-    ----------
-    images : List[ImageIO.ImzMLReader]
-       
     """
 
-    def __init__(self,images : List[ImageIO.ImzMLReader], neighborhood_size: int = 0, transforms = None, buffer_type='memory')-> None:
-        super().__init__(images, buffer_type)
-        
-        self.spectrum_depth = self.images[0].GetXAxisDepth()
-        if "memory" == self.buffer_type:
-            self.buffer = [(np.array([None] * self.images[k].GetNumberOfSpectra()), np.zeros((self.images[k].GetNumberOfSpectra(), self.spectrum_depth), dtype = np.float32)) for k in range(len(self.images))]
-        
-        self.neighborhood_size = neighborhood_size
-        self.index_images = []
-        self.footprint = np.ones([2*neighborhood_size+1, 2*neighborhood_size+1, 1])
-        self.transforms = transforms
+    def find_subrange_indices(self, xs, center_index, tolerance, is_ppm):
+        # Calculate the lower and upper bounds based on the index and tolerance
+        center_value = xs[center_index]
+        if is_ppm:
+            tol = xs[center_index] * tolerance * 10e-6
 
+        lower_bound = center_value - tol
+        upper_bound = center_value + tol
+
+        # Initialize search pointers
+        left_index = center_index
+        right_index = center_index
+
+        # Move the left pointer to find the lower bound
+        while left_index > 0 and xs[left_index - 1] >= lower_bound:
+            left_index -= 1
+
+        # Move the right pointer to find the upper bound
+        while right_index < len(xs) - 1 and xs[right_index + 1] <= upper_bound:
+            right_index += 1
+
+        # print(left_index,center_index, right_index + 1, "=>", abs(left_index - (right_index+1)))
+        # Extract the values within the range
+        return left_index, right_index + 1
+
+
+    def __init__(self,images:List[ImageIO.ImzMLReader], 
+                 spatial_masks:List[np.array] = None, 
+                 spectrum_mask_indices:np.array = None,
+                 label_map: Dict = None,
+                 shape:Tuple = None, 
+                 transform_data = None, 
+                 transform_labels = None, 
+                 buffer_type:str='memory', 
+                 tolerance:np.float32=None, 
+                 toleranceIsInPPM:bool=True, 
+                 reduce_function=np.mean, 
+                 shuffle=False,
+                 quiet_init=True)-> None:
+        """_summary_
+
+        Args:
+            images (List[ImageIO.ImzMLReader]): A list of ImageIO.ImzMLReader objects
+            spatial_masks (List[np.array], optional): A list of labeled masks. If non the ImzMLReader.GetMaskArray is used for each image. Defaults to None.
+            exclude_labels (List[np.int32]): A list of labels which are excluded.
+            spectrum_mask_indices (np.array, optional): A list of indices along the x axis (indices of m/z values). If None, the whole spectra with all m/z values is loaded. Defaults to None.
+            shape (Tuple, optional): The shape can be used to query a neighborhood around a given spectrum/pixel. For example if shape is set to (-1,5,5), a 5x5 neighborhood is sampled around a queried pixel position. If shape is set to (-1,) the shape size is set to either the number of indices given in the spectrum_mask_indices or is set to hew whole spectrum depth. Defaults to (-1,).
+            tolerance (int, optional): if spectrum_mask_indices is used, a tolerance can be set to apply a reduce function around the indices. Defaults to 20.
+            reduce_function (function, optional): Reduce function if tolerance is set. Defaults to numpy.mean.
+            transforms (Function, optional): A transformation can pe applied to a given spectrum using e.g. the transforms of torchvision. Defaults to None.
+            buffer_type (str, optional): During querying the images it is possible to buffer queried spectra in memory to provide a fast access to upcoming queries e.g. in the next epoch. Defaults to 'memory'. Disable by setting it to None.
+        """
+        super().__init__(images, buffer_type)
+
+        # track member variables        
+        self.shape = shape
+        self.tolerance = tolerance
+        self.spectrum_mask_indices = spectrum_mask_indices
+        self.x_hws = 0
+        self.y_hws = 0
+        self.xs = self.images[0].GetXAxis()
+        self.reduce_function=reduce_function
+        self.ranges = None
+        self.is_ppm = toleranceIsInPPM
+        self.transform_data = transform_data
+        self.transform_labels = transform_labels
+        self.label_map = label_map
+        self.labels = set()
+        
+        
+        
+
+        if self.tolerance and self.spectrum_mask_indices is not None:
+            self.ranges = [self.find_subrange_indices(self.xs, index, self.tolerance, self.is_ppm) for index in self.spectrum_mask_indices]
+        else:
+            self.tolerance = None
+            self.ranges = None
+
+
+        # make sure all images have identically x axis
+        for imageID, handle in enumerate(self.images):          
+            assert(np.all(self.xs == handle.GetXAxis())) # check for equal x axis size
+        
+        if self.spectrum_mask_indices is None: # complete spectrum data
+            self.spectrum_depth = self.images[0].GetXAxisDepth()
+        else: # mask a spectrum using a list of indices
+            self.spectrum_depth = self.spectrum_mask_indices.shape[0]
+
+            
+        if self.shape and len(self.shape) >= 2:
+            if self.shape[-2]%2 == 0 or self.shape[-1]%2 == 0:
+                raise Exception(f"We only support odd neighborhood sizes!")          
+            
+            # half window size 
+            self.x_hws = self.shape[-1]//2
+            self.y_hws = self.shape[-2]//2
+
+        if "memory" == self.buffer_type:
+            self.buffer = []            
+            for k in range(len(self.images)):
+                buffer_spectrum_label = np.zeros((self.images[k].GetNumberOfSpectra(),), dtype=np.bool)
+                buffer_spectrum_data = np.zeros((self.images[k].GetNumberOfSpectra(), self.spectrum_depth), dtype = np.float32)
+                self.buffer.append((buffer_spectrum_label, buffer_spectrum_data))
+        
+        # self.neighborhood_size = neighborhood_size
+        self.index_images = []
         self.hit_counter = [0]*len(self.images)
 
+        # for each image
         for imageID, handle in enumerate(self.images):
-            assert(self.spectrum_depth == handle.GetXAxisDepth())
             imageElements = []
-            # get array returns a 2D image
-            index_image = handle.GetArray(handle.GetXAxis()[self.spectrum_depth//2], 1, squeeze=False).astype(np.int32)
-            index_image.fill(-1)
+
+            index_image = -np.ones(handle.GetShape()[::-1], dtype=np.int32)
+        
+            if spatial_masks is None:
+                mask_image = handle.GetMaskArray()
+            else:
+                mask_image = spatial_masks[imageID]
 
             for spectrumID in range(handle.GetNumberOfSpectra()):
                 (x,y,z) = handle.GetSpectrumPosition(spectrumID)
-                imageElements.append((imageID, spectrumID, (x,y,z)))
                 index_image[z,y,x] = spectrumID
+                label = mask_image[z,y,x]
+                if label is None:
+                    continue
+                imageElements.append((imageID, spectrumID, (x,y,z), label))
+                self.labels.add(label)
+                
 
+            # for each imageID insert elements and an index image
             self.elements.extend(imageElements)
             self.index_images.append(index_image)
+    
+
+        if shuffle:
+            random.shuffle(self.elements)
 
     def __len__(self) -> int:
         return len(self.elements)
 
     def __getitem__(self, index):
         return self.getitems([index])
+    
 
-    def getitems(self, indexes: List[int]):
-        ids_split_to_images = {}
+    def getitems(self, dataset_query_indices: List[int]):
+        
+        image_query_indices = {imageID:[] for imageID, _ in enumerate(self.images)}
+        image_query_labels = {imageID:[] for imageID, _ in enumerate(self.images)}
 
-        #sort by images and create list of image related ids         
-        for index in indexes:
-            imageID, spectrumID, (x,y,z) = self.elements[index]
-            shape = self.images[imageID].GetShape()
-            if imageID not in ids_split_to_images:
-                ids_split_to_images[imageID] = []
-            
-            if self.neighborhood_size > 0: 
-                # neighborhood do not violate border regions
-                left = np.clip(x-self.neighborhood_size, 0, shape[0])
-                right = np.clip(x+self.neighborhood_size+1, 0, shape[0])
-                bottom = np.clip(y-self.neighborhood_size,0, shape[1])
-                top = np.clip(y+self.neighborhood_size+1,0, shape[1])
-
-                # get all spectra indices for the requested spectrum position and neighbors
-                indices = self.index_images[imageID][0,bottom:top,left:right]
-                indices = indices.flatten()
-
-                # handle invalid spectra positions (indicated by -1 in index images)
-                if np.any(indices < 0): 
+        for index in dataset_query_indices:
+            # check origin
+            imageID, spectrumID, (x,y,z), label = self.elements[index]
+            image_shape = self.images[imageID].GetShape()
+            # save label
+            image_query_labels[imageID].append(label)
+            if self.shape:
+                left = np.clip(x-self.x_hws, 0, image_shape[0])
+                right = np.clip(x+self.x_hws+1, 0, image_shape[0])
+                bottom = np.clip(y-self.y_hws,0, image_shape[1])
+                top = np.clip(y+self.y_hws+1,0, image_shape[1])
+                indices = self.index_images[imageID][0,bottom:top,left:right].flatten()
+                if any(indices < 0): 
                     choices = np.random.choice(indices[indices>=0], len(indices[indices < 0]))
                     indices[indices < 0] = choices
-
-                # handling missing values if at border
-                expected_indices = (self.neighborhood_size*2+1)**2
+                
+                expected_indices = (2*self.x_hws+1) * (2*self.y_hws+1)
                 if len(indices) < expected_indices:
                     missing_indices = expected_indices - len(indices)
                     indices = np.concatenate([indices,np.random.choice(indices, missing_indices)])
 
-                indices = indices.tolist()
+                image_query_indices[imageID].append(indices)
             else:
-                indices = [spectrumID]
+                image_query_indices[imageID].extend([spectrumID])
 
-            ids_split_to_images[imageID].extend(indices)
-
-        
-        
-        result = None
-        interim = None
         BUFFER_QUERY = 0
         BUFFER_DATA = 1
-        for imageID, indices in ids_split_to_images.items():
+        result_data = None
+        result_labels = None
+
+        for imageID, image in enumerate(self.images):
+            # get all indices for the image
+            indices = np.array(image_query_indices[imageID], dtype=np.int32)
+            labels = np.array(image_query_labels[imageID], dtype=np.int32)
             
-            # use buffering
-            if self.buffer_type is not None:
 
-                indices = np.array(indices)
-                interim = np.zeros((len(indices), self.spectrum_depth))
-
-                # mask buffer entries which are not already filled with data
-                query_mask = self.buffer[imageID][0][indices] == None
+            if self.buffer_type == "memory": # buffering is used
+                image_buffer_data = self.buffer[imageID][BUFFER_DATA]
+                image_buffer_query = self.buffer[imageID][BUFFER_QUERY]
                 
-                # load data from imzML
-                if query_mask.any():
-                    self.hit_counter[imageID] = self.hit_counter[imageID] + 1
-                    print(self.hit_counter, end='\r')
-                    # get data for those indices from the image
-                    interim[query_mask] = self.images[imageID].GetSpectra(indices[query_mask])
-                    # mark buffer query structure to prevent double queries
-                    self.buffer[imageID][BUFFER_QUERY][indices[query_mask]] = True
+                # mask indices which require to be loaded from ImzML image (buffer status False indicates "not buffered")
+                query_mask = image_buffer_query[indices] == False
+                miss_indices = indices[query_mask]
+                # hit_indices = image_indices[~query_mask]
 
-                    # copy data to buffer
-                    self.buffer[imageID][BUFFER_DATA][indices[query_mask]] = interim[query_mask]
-                    
-                # for all entries in the BUFFER_QUERY structure which already have data
-                # copy buffered data to interim data structure
-                if ~query_mask.any():
-                    interim[~query_mask] = self.buffer[imageID][BUFFER_DATA][indices[~query_mask]]
-            else:
-                interim = self.images[imageID].GetSpectra(indices)
+                # load from imzML and store in buffer
+                if np.any(query_mask):
+                    # print(len(miss_indices)/len(indices))
+
+                    # get data for those indices from the image
+                    spectra = image.GetSpectra(miss_indices).astype(np.float32)
+                    image_buffer_query[miss_indices] = True
+
+                    if self.spectrum_mask_indices is None: # check if a centroids list exists
+                        # no one was set so we put the raw spectra into the buffer
+                        image_buffer_data[miss_indices] = spectra
+                    else: # a spectrum mask exists
+                        if self.ranges: # use range queries along the spectra
+                            for k, [l,u] in enumerate(self.ranges):
+                                image_buffer_data[miss_indices,k] = self.reduce_function(spectra[:,l:u],axis=1)
+                                # print(self.reduce_function(spectra[:,l:u],axis=1), l,u, image_buffer_data[miss_indices][:,k])
+                        else:
+                            image_buffer_data[miss_indices] = spectra[..., self.spectrum_mask_indices]
             
-            if result is None:
-                result = interim
+                # load from buffer           
+                batch_data = image_buffer_data[indices]
+                # print("mean", np.mean(batch_data))
+            else: # no buffering is used
+                spectra = self.images[imageID].GetSpectra(indices)
+                if self.spectrum_mask_indices is not None:
+                    if self.ranges: # use range queries along the spectra
+                        for k, [l,u] in enumerate(self.ranges):
+                            batch_data = self.reduce_function(spectra[:,l:u],axis=1)
+                    else:
+                        batch_data = spectra[..., self.spectrum_mask_indices]
+                else:
+                    batch_data = self.images[imageID].GetSpectra(indices)            
+
+            if self.shape: # reshape to [B,C,H,W]
+                batch_data = np.reshape(batch_data, (-1,) + self.shape + (self.spectrum_depth,))
+                batch_data = np.swapaxes(batch_data, 1,3)
+                
+            
+            # combine queries from different images
+            if result_data is None:
+                result_data = batch_data
             else:
-                result = np.concatenate([result, interim])
+                result_data = np.concatenate([result_data, batch_data])
+
+            if result_labels is None:
+                result_labels = np.array(labels, np.int32)
+            else:
+                result_labels = np.concatenate([result_labels, np.array(labels, np.int32)])
+            
+            
         
-        if self.transforms is not None:
-            result = self.transforms(result)
+        # at this stage we receive a list of spectra for n queried central spectra we receive a list of
+        # n*(2*s+1)^2 where s is the half size of the neighborhood
+        # we can add a transformer that now reshapes those spectra into the correct shape.
+        # e.g. from [n*(2*s+1)^2,D] we go to => [n, D, 2*s+1, 2*s+1]
+        # with D is the number of channels
+
+        # trafo = transforms.Compose([
+        #     transforms.Lambda(lambda x: np.transpose(x)), #=> (D,9)
+        #     transforms.Lambda(lambda x: np.reshape(x, (1, x.shape[0], int(np.sqrt(x.shape[1])), int(np.sqrt(x.shape[1]))))), #=> (1,D,3,3)
+        #     transforms.Lambda(lambda x: torch.tensor(x, dtype=torch.float32))])
+        if self.transform_data is not None:
+            result_data = self.transform_data(result_data)
         
-        return result
+        if self.transform_labels is not None:
+            result_labels = self.transform_labels(result_labels)
+        
+        return result_data, result_labels
 
 
 
