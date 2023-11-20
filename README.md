@@ -44,7 +44,7 @@ apt-get install -q -y --no-install-recommends \
 #### Package installation 
 Consider to install pyM²aia in an [virtual environment](https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-and-using-virtual-environments).
 
-Install [pyM²aia](https://pypi.org/project/pym2aia/) on windows or linux using pip.
+Install [pyM²aia](https://pypi.org/project/m2aia/) on windows or linux using pip.
 
 ```sh
 # cd projectDir/
