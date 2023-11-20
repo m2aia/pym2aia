@@ -11,8 +11,7 @@ class TestImageIO(TestCase):
 
 
     def setUp(self):
-        self.Image = m2.ImzMLReader(getTestData("data/test.imzML"))
-        self.Image.Execute()
+        self.Image = m2.ImzMLReader(getTestData("data/test.imzML"))        
         self.eps = 1e-12
         self.tol_in_da = 5
 
@@ -35,6 +34,11 @@ class TestImageIO(TestCase):
         self.assertFalse(np.any(~np.equal(sitk.GetArrayFromImage(self.Image.GetImage(last, self.tol_in_da)), np.load(getTestData("data/YS_UB_5.npy")))))
 
     def test_GetOrigin_ExceptionThrownOnMzIsOnBounds(self):
+        origin = self.Image.GetOrigin()
+        self.assertFalse(np.any(~np.equal(origin, [0,0,0])))
+        print("Origin:", origin)
+
+    def test_SetSmoothing(self):
         origin = self.Image.GetOrigin()
         self.assertFalse(np.any(~np.equal(origin, [0,0,0])))
         print("Origin:", origin)

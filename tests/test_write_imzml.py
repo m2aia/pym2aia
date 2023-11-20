@@ -14,17 +14,14 @@ class TestWriteImzML(TestCase):
         random.seed(42)
         self.Image = m2.ImzMLReader(getTestData("data/test.imzML"))
         self.Image.SetBaselineCorrection(m2.m2BaselineCorrectionTopHat, 50)
-        self.Image.Execute()
 
     def test_WriteImzML_ContinuousCentroids(self):
         self.Image.SetTolerance(50)
         self.Image.WriteContinuousCentroidImzML("/tmp/continuous_centroid.imzML", [x for x in range(2000,3000,20)])
 
-        ImageTmp = m2.ImzMLReader("/tmp/continuous_centroid.imzML")
-        ImageTmp.Execute()
-        
+        ImageTmp = m2.ImzMLReader("/tmp/continuous_centroid.imzML")        
         ImageRef = m2.ImzMLReader(getTestData("data/continuous_centroid.imzML"))
-        ImageRef.Execute()
+
 
         self.assertFalse(np.any(~np.equal(ImageRef.GetXAxis(), ImageTmp.GetXAxis())))
 

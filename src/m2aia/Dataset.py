@@ -32,11 +32,51 @@ class BaseDataSet():
 
 
 class SpectrumDataset(BaseDataSet):
-    """Dataset for accession of individual spectra. 
+    """Dataset for accession individual spectra and class labels (optional) of multiple images (m2aia.ImzMLReader objects). 
     
-    __len__ so that len(dataset) returns the size of the dataset, that is equal to the sum of the number of spectra (N) for each image.
-    __getitem__ to support the indexing such that dataset[i] can be used to get i'th sample. i is pointing to indices 0,...,p-1,p,...,q-1, ... N, with p=#SpectraImage1, q=#SpectraImage2 etc...
+    The aim of the SpectrumDataset is to provide convenient access to spectra of single or multiple ImzMLReaders.
+    Two access strategy exist:
+    1) Spectral approach: a single spectrum is returned.
+    2) Spatio-spectral: a central spectrum and corresponding neighbors are returned.
+
+    To use multiple images a spectra depth of equal size for each image is required.
+
+    A label mask can be provided and is used to return labels for each accessed element.
+    
+    To use the spatio-spectral approach, a shape element is required. The Dataset will then return 
+    the spectrum embedded in neighboring spectra, i.e. if the shape tuple is shape=(5,5) the shape of a
+    data entry is [B,C,H,W], with batchsize as B = 1, spectrum depth as C = len(spectrum), width 
+    as W=5 and height as H=5 of the patch.
+
+    If no shape element was provided, the Dataset will return a single spectrum with shape [B=1,C].
+
+    If multiple elements of the Dataset should be queried at one, the SpectrumDataset.getitems(list_of_indices)
+    returns a batch like object containing the elements. i.e. without a shape definition returned elements will have 
+    the shape [B=len(list_of_indices), C] and with shape=(5,5) the shape [B=len(list_of_indices),C,H=5,W=5].
+    This is used in m2aia.BatchGenerator.
+
+    
+    
+    Complete processing examples with focus on deep learning can be found on https://github.com/m2aia/pym2aia-examples 
+    
+    Example usage::
+
+        import m2aia as m2
+
+        I = m2.ImzMLReader("path/to/imzMl/file.imzML")
+        I.SetNormalization(m2.m2NormalizationTIC)
+        I.SetIntensityTransformation(m2.m2IntensityTransformationSquareRoot)
+        I.Execute()      
+
+        dataset = m2.SpectrumDataset([I], shuffle=True)
+        for X,Y in dataset():
+            print("Spectrum", X.shape, "Class Labels", Y.shape)
+            do_something(X,Y)
+
     """
+
+    def find_nearest_indices(self, centroids: np.array, xaxis: np.array):
+        return np.array([np.argmin(np.abs(xaxis - mz)) for mz in centroids])
 
     def find_subrange_indices(self, xs, center_index, tolerance, is_ppm):
         # Calculate the lower and upper bounds based on the index and tolerance
@@ -65,23 +105,24 @@ class SpectrumDataset(BaseDataSet):
 
 
     def __init__(self,images:List[ImageIO.ImzMLReader], 
-                 spatial_masks:List[np.array] = None, 
-                 spectrum_mask_indices:np.array = None,
+                 labeled_images:List[np.array] = None,
+                 sampling_masks:List[np.array] = None, 
+                 spectrum_mask_indices:List[int] = None,
+                 tolerance:np.float32=None, 
+                 is_tolerance_in_ppm:bool=True, 
                  label_map: Dict = None,
                  shape:Tuple = None, 
                  transform_data = None, 
                  transform_labels = None, 
                  buffer_type:str='memory', 
-                 tolerance:np.float32=None, 
-                 toleranceIsInPPM:bool=True, 
-                 reduce_function=np.mean, 
+                 reduce_function=np.mean,
                  shuffle=False,
                  quiet_init=True)-> None:
         """_summary_
 
         Args:
             images (List[ImageIO.ImzMLReader]): A list of ImageIO.ImzMLReader objects
-            spatial_masks (List[np.array], optional): A list of labeled masks. If non the ImzMLReader.GetMaskArray is used for each image. Defaults to None.
+            labeled_images (List[np.array], optional): A list of labeled masks. If non the ImzMLReader.GetMaskArray is used for each image. Defaults to None.
             exclude_labels (List[np.int32]): A list of labels which are excluded.
             spectrum_mask_indices (np.array, optional): A list of indices along the x axis (indices of m/z values). If None, the whole spectra with all m/z values is loaded. Defaults to None.
             shape (Tuple, optional): The shape can be used to query a neighborhood around a given spectrum/pixel. For example if shape is set to (-1,5,5), a 5x5 neighborhood is sampled around a queried pixel position. If shape is set to (-1,) the shape size is set to either the number of indices given in the spectrum_mask_indices or is set to hew whole spectrum depth. Defaults to (-1,).
@@ -94,14 +135,14 @@ class SpectrumDataset(BaseDataSet):
 
         # track member variables        
         self.shape = shape
-        self.tolerance = tolerance
         self.spectrum_mask_indices = spectrum_mask_indices
+        self.tolerance = tolerance
+        self.is_ppm = is_tolerance_in_ppm
         self.x_hws = 0
         self.y_hws = 0
         self.xs = self.images[0].GetXAxis()
         self.reduce_function=reduce_function
         self.ranges = None
-        self.is_ppm = toleranceIsInPPM
         self.transform_data = transform_data
         self.transform_labels = transform_labels
         self.label_map = label_map
@@ -146,23 +187,30 @@ class SpectrumDataset(BaseDataSet):
         self.index_images = []
         self.hit_counter = [0]*len(self.images)
 
+
         # for each image
         for imageID, handle in enumerate(self.images):
             imageElements = []
 
             index_image = -np.ones(handle.GetShape()[::-1], dtype=np.int32)
         
-            if spatial_masks is None:
+            if labeled_images is None:
                 mask_image = handle.GetMaskArray()
             else:
-                mask_image = spatial_masks[imageID]
+                mask_image = labeled_images[imageID]
+
+            if sampling_masks is None:
+                sampling_mask = handle.GetMaskArray()
+            else:
+                sampling_mask = sampling_masks[imageID]
 
             for spectrumID in range(handle.GetNumberOfSpectra()):
                 (x,y,z) = handle.GetSpectrumPosition(spectrumID)
+                
+                if sampling_mask[z,y,x] <= 0 or mask_image[z,y,x] < 0:
+                    continue
                 index_image[z,y,x] = spectrumID
                 label = mask_image[z,y,x]
-                if label is None:
-                    continue
                 imageElements.append((imageID, spectrumID, (x,y,z), label))
                 self.labels.add(label)
                 
@@ -176,9 +224,18 @@ class SpectrumDataset(BaseDataSet):
             random.shuffle(self.elements)
 
     def __len__(self) -> int:
+        """
+        Returns the number of accessible spectra.
+        If multiple images are used, len is the sum of accessible elements of all images.
+        
+        Returns:
+            int: Number of accessible elements of this Dataset.
+        """
+    
         return len(self.elements)
 
     def __getitem__(self, index):
+        
         return self.getitems([index])
     
 

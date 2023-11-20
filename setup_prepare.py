@@ -12,7 +12,7 @@ def prepare():
     parser.add_argument("-t","--target", default="install_binaries")
     parser.add_argument("-l","--linux-archive", default="linux.tar.gz")
     parser.add_argument("-w","--windows-archive", default="windows.zip")
-    parser.add_argument("-v","--version",default="v2023.08-alpha")
+    parser.add_argument("-v","--version",default="M2aia-v2023.10")
     parser.add_argument("-d","--download", action="store_true")
     parser.add_argument("--linux", action="store_true")
     parser.add_argument("--windows", action="store_true")
