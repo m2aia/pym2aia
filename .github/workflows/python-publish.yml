@@ -49,7 +49,7 @@ jobs:
         cat <<- EOF > $HOME/.pypirc
           [pypi]
           username: __token__
-          password: $GH_ACTION_PYPI
+          password: ${{ secrets.GH_ACTION_PYPI }}
         EOF
         python -m twine upload dist/*
       
