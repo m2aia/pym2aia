@@ -33,7 +33,16 @@ jobs:
         python -m pip install --upgrade pip
         pip install build
     - name: Build package
-      run: make wheel
+      run: |
+        python setup_prepare.py --linux --download -v v2023.10.6
+        python -m build
+        mv dist/m2aia-0.5.2-py3-none-any.whl dist/m2aia-0.5.2-py3-none-manylinux_2_31_x86_64.whl
+        python setup_prepare.py --windows --download -v v2023.10.8
+        python -m build
+        mv dist/m2aia-0.5.2-py3-none-any.whl dist/m2aia-0.5.2-py3-none-win-amd64.whl
+        python setup_prepare.py --windows --linux -v v2023.10.6
+        python -m build
+        rm dist/m2aia-0.5.2-py3-none-any.whl
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
