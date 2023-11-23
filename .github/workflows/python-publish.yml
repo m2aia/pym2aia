@@ -45,11 +45,5 @@ jobs:
         rm dist/m2aia-0.5.2-py3-none-any.whl
     - name: Publish package
       run: |
-        run: |
-        cat <<- EOF > $HOME/.pypirc
-          [pypi]
-          username: __token__
-          password: ${{ secrets.GH_ACTION_PYPI }}
-        EOF
-        python -m twine upload dist/*
+        python -m twine upload -u __token__ -p ${{secrets.GH_ACTION_PYPI}} dist/*
       
