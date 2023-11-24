@@ -32,7 +32,7 @@ jobs:
         mv dist/m2aia-${{ github.event.release.tag_name }}-py3-none-any.whl dist/m2aia-${{ github.event.release.tag_name }}-py3-none-manylinux_2_31_x86_64.whl
         python setup_prepare.py --windows --download -v v2023.10.8
         python -m build
-        mv dist/m2aia-${{ github.event.release.tag_name }}-py3-none-any.whl dist/m2aia-${{ github.event.release.tag_name }}-py3-none-win-amd64.whl
+        mv dist/m2aia-${{ github.event.release.tag_name }}-py3-none-any.whl dist/m2aia-${{ github.event.release.tag_name }}-py3-none-win_amd64.whl
         python setup_prepare.py --windows --linux -v v2023.10.6
         python -m build
         rm dist/m2aia-${{ github.event.release.tag_name }}-py3-none-any.whl
