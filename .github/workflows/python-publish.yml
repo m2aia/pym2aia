@@ -44,6 +44,8 @@ jobs:
         python -m build
         rm dist/m2aia-0.5.2-py3-none-any.whl
     - name: Publish package
+      env:
+        GH_ACTION_PYPI: ${{ secrets.GH_ACTION_PYPI }}
       run: |
-        python -m twine upload -u __token__ -p ${{secrets.GH_ACTION_PYPI}} dist/*
+        python -m twine upload -u __token__ -p $GH_ACTION_PYPI dist/*
       
