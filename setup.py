@@ -4,9 +4,15 @@ from setuptools import find_namespace_packages
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+import os
+if "PYM2AIA_VERSION_TAG" in os.environ:
+    tag_name = os.environ["PYM2AIA_VERSION_TAG"]
+else:
+    print("No 'PYM2AIA_VERSION_TAG' defined")
+
 setuptools.setup(
     name="m2aia",
-    version="0.5.3",
+    version=tag_name,
     author="Jonas Cordes",
     author_email="j.cordes@hs-mannheim.de",
     description="Provide interfaces for M2aia.",
