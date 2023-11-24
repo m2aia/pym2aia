@@ -7,9 +7,7 @@
 # documentation.
       
 name: Publish Python 🐍 distribution 📦 to PyPI
-
-on: push
-
+on: release
 jobs:
   build:
     name: Build distribution 📦
@@ -26,16 +24,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install build==0.10.0 wget numpy SimpleITK twine
     - name: Build package
+      env:
+        PYM2AIA_VERSION_TAG: ${{ github.event.release.tag_name }}
       run: |
         python setup_prepare.py --linux --download -v v2023.10.6
         python -m build
-        mv dist/m2aia-0.5.2-py3-none-any.whl dist/m2aia-0.5.2-py3-none-manylinux_2_31_x86_64.whl
+        mv dist/m2aia-${{ github.event.release.tag_name }}-py3-none-any.whl dist/m2aia-${{ github.event.release.tag_name }}-py3-none-manylinux_2_31_x86_64.whl
         python setup_prepare.py --windows --download -v v2023.10.8
         python -m build
-        mv dist/m2aia-0.5.2-py3-none-any.whl dist/m2aia-0.5.2-py3-none-win-amd64.whl
+        mv dist/m2aia-${{ github.event.release.tag_name }}-py3-none-any.whl dist/m2aia-${{ github.event.release.tag_name }}-py3-none-win-amd64.whl
         python setup_prepare.py --windows --linux -v v2023.10.6
         python -m build
-        rm dist/m2aia-0.5.2-py3-none-any.whl
+        rm dist/m2aia-${{ github.event.release.tag_name }}-py3-none-any.whl
     - name: Store the distribution packages
       uses: actions/upload-artifact@v3
       with:
