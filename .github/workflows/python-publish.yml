@@ -7,7 +7,9 @@
 # documentation.
       
 name: Publish PyPI
-on: release
+on: 
+  release:
+    types: [published]
 jobs:
   build:
     name: Build distribution
