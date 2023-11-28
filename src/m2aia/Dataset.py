@@ -179,7 +179,7 @@ class SpectrumDataset(BaseDataSet):
         if "memory" == self.buffer_type:
             self.buffer = []            
             for k in range(len(self.images)):
-                buffer_spectrum_label = np.zeros((self.images[k].GetNumberOfSpectra(),), dtype=np.bool)
+                buffer_spectrum_label = np.zeros((self.images[k].GetNumberOfSpectra(),), dtype=bool)
                 buffer_spectrum_data = np.zeros((self.images[k].GetNumberOfSpectra(), self.spectrum_depth), dtype = np.float32)
                 self.buffer.append((buffer_spectrum_label, buffer_spectrum_data))
         
