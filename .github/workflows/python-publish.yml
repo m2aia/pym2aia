@@ -52,7 +52,7 @@ jobs:
     - build
     runs-on: ubuntu-latest
     environment:
-      name: pipy_api_key
+      name: pipy
       url: https://pypi.org/p/m2aia  # Replace <package-name> with your PyPI project name
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
