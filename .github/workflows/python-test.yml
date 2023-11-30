@@ -1,0 +1,41 @@
+    
+name: Test
+on: 
+  push
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.x"
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get install -q -y --no-install-recommends libglu1-mesa-dev libopenslide-dev 
+        python -m pip install --upgrade pip
+        pip install build==0.10.0 wget numpy SimpleITK twine
+    - name: Build package
+      env:
+        PYM2AIA_VERSION_TAG: ${{ github.ref_name }}
+        #  PYM2AIA_VERSION_TAG: 0.5.12
+      run: |
+        python setup_prepare.py --linux --download -v v2023.10.6
+        python -m build
+        mv dist/m2aia-${PYM2AIA_VERSION_TAG}-py3-none-any.whl dist/m2aia-${PYM2AIA_VERSION_TAG}-py3-none-manylinux_2_31_x86_64.whl
+        python setup_prepare.py --windows --download -v v2023.10.8
+        python -m build
+        mv dist/m2aia-${PYM2AIA_VERSION_TAG}-py3-none-any.whl dist/m2aia-${PYM2AIA_VERSION_TAG}-py3-none-win_amd64.whl
+        python setup_prepare.py --windows --linux -v v2023.10.6
+        python -m build
+        rm dist/m2aia-${PYM2AIA_VERSION_TAG}-py3-none-any.whl
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v3
+      with:
+        name: python-package-distributions
+        path: dist/
+
