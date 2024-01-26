@@ -49,10 +49,9 @@ Install [pyM²aia](https://pypi.org/project/m2aia/) on windows or linux using pi
 ```sh
 # cd projectDir/
 python3 -m venv .venv
-pip3 install --upgrade pip
 
 source .venv/bin/activate
-# 
+pip3 install --upgrade pip
 
 pip install m2aia
 ```
@@ -61,12 +60,6 @@ _Note:_ Different versions of the pypi package exists for windows and linux base
  - Linux: m2aia-x.x.x-py3-none-manylinux_2_31_x86_64.whl 
  - Windows: m2aia-x.x.x-py3-none-win-amd64.whl 
  - Source: m2aia-x.x.x.tar.gz
-
-The Source distribution contains *.so and *.dll library files for both, windows and linux. You can try to install pyM²aia by extracting the archive and using the following command within the project folder:
-```
-python setup.py install
-```
-
 
 
 ## Getting started
@@ -146,6 +139,14 @@ M2AIA_PATH=/home/username/M2aiaWorkDir/build/MITK-build/lib
 All pyM2aia libraries on the system will now use this custom library search path.
 
 _To promote your work you can just create a pull requests in both repositories or contact me personally._
+
+### Manual package installation using the source distribution from pypi
+
+The pypi [Source distribution](https://pypi.org/project/m2aia/#files) contains *.so and *.dll library files for both, windows and linux. You can try to install pyM²aia by extracting the archive and using the following command within the project folder:
+
+```
+python setup.py install
+```
 
 
 # Cite M²aia
