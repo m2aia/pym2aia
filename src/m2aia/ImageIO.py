@@ -502,7 +502,13 @@ class ImzMLReader(object):
 
     def GetIndexArray(self) -> np.ndarray:
         ''' Get the index image data as numpy array.
-        The pixel values are the spectrum ids (pixel value >= 1) and background (pixel value == 0).
+        The pixel values are the spectrum IDs starting with 0. Use the mask array to identify valid spectrum IDs.
+
+        Access valid spectrum IDs:: 
+        
+            indexImage = I.GetIndexArray()
+            maskImage = I.GetMaskArray()
+            validIndices = indexImage[maskImage > 0]
 
         :return: Numpy array of size [x,y,z] with dtype=np.uint32.
         '''
@@ -514,7 +520,7 @@ class ImzMLReader(object):
 
     def GetIndexImage(self):
         ''' Get the index image data as parameterized SimpleITK.Image.
-        The pixel values are the spectrum ids (pixel value >= 1) and background (pixel value == 0).
+            This method calls :func:`~m2aia.ImageIO.GetIndexArray`
 
         :return: sitk.Image of size [x,y,z] with dtype=np.uint32.
         '''
