@@ -5,7 +5,11 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 import os
+<<<<<<< HEAD
 tag_name="local"
+=======
+tag_name = "local"
+>>>>>>> develop
 if "PYM2AIA_VERSION_TAG" in os.environ:
     tag_name = os.environ["PYM2AIA_VERSION_TAG"]
 else:
