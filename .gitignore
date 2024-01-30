@@ -9,6 +9,7 @@ m2aia-*
 .vscode
 venv*
 *.zip
+*.tar.gz
 *.mis
 *.jpg
 *.h5
