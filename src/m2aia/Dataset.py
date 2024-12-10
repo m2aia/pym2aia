@@ -106,7 +106,8 @@ class SpectrumDataset(BaseDataSet):
 
     def __init__(self,images:List[ImageIO.ImzMLReader], 
                  labeled_images:List[np.array] = None,
-                 sampling_masks:List[np.array] = None, 
+                 sampling_masks:List[np.array] = None,
+                 exclude_labels:List[int] = [],
                  spectrum_mask_indices:List[int] = None,
                  tolerance:np.float32=None, 
                  is_tolerance_in_ppm:bool=True, 
@@ -207,7 +208,7 @@ class SpectrumDataset(BaseDataSet):
             for spectrumID in range(handle.GetNumberOfSpectra()):
                 (x,y,z) = handle.GetSpectrumPosition(spectrumID)
                 
-                if sampling_mask[z,y,x] <= 0 or mask_image[z,y,x] < 0:
+                if sampling_mask[z,y,x] <= 0 or mask_image[z,y,x] < 0 or mask_image[z,y,x] in exclude_labels:
                     continue
                 index_image[z,y,x] = spectrumID
                 label = mask_image[z,y,x]
