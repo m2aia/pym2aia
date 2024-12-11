@@ -37,12 +37,15 @@ def validate_environment():
         logging.debug("You can fix this problem by adding 'M2AIA_PATH' to your system environment variables. To do so, download the latest M2aia binaries from https://m2aia.github.io/m2aia.")
         raise ImportError("Loading M2aia was not possible!")
 
-
 def prepare_environment():
     # os.environ["M2AIA_DEBUG"] = ""
     # default search path is pointing to packaged binaries
-    if not "M2AIA_PATH" in os.environ:        
-        os.environ["M2AIA_PATH"] = str(pathlib.Path(os.path.abspath(__file__)).parent.joinpath("bin"))
+    if not "M2AIA_PATH" in os.environ:
+        package_lib_dir = pathlib.Path(os.path.abspath(__file__)).parent.parent.parent.parent
+        if package_lib_dir:
+            os.environ["M2AIA_PATH"] = str(package_lib_dir)
+        else:
+            os.environ["M2AIA_PATH"] = str(pathlib.Path(os.path.abspath(__file__)).parent.joinpath("bin"))
         logging.debug("Default library search path: ", os.environ["M2AIA_PATH"])
     else:
         logging.debug("Manually defined library search path: ", os.environ["M2AIA_PATH"])
@@ -50,9 +53,7 @@ def prepare_environment():
 
 prepare_environment()
 validate_environment()
-
 # dry-load M2aia binary libraries
 get_library()
-
 
 
